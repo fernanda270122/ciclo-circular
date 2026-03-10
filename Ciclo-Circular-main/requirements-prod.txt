@@ -33,3 +33,4 @@ pandas
 numpy
 scipy
 scikit-learn
+python-bidi==0.4.2
