@@ -1,0 +1,122 @@
+{% extends 'base_admin.html' %}
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 pt-6 pb-12">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8 border-b border-slate-200 dark:border-slate-800 pb-6">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center text-2xl shadow-sm">
+                <i class="fa-solid fa-building-columns"></i>
+            </div>
+            <div>
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Instituciones</h2>
+                <p class="text-sm text-slate-500">Coordinadores asignados por institución</p>
+            </div>
+        </div>
+        <a href="{% url 'home_admin' %}" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-indigo-600 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-semibold transition duration-150">
+            <i class="fa-solid fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <!-- Selector de instituciones -->
+    <div class="mb-8 bg-white dark:bg-[#1e293b] rounded-2xl shadow border border-slate-200 dark:border-slate-700 p-6">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Seleccione Institución</p>
+        <div class="flex flex-wrap gap-2">
+            {% for item in data %}
+            <button onclick="mostrarInstitucion('inst_{{ forloop.counter }}')"
+                class="inst-btn px-4 py-2 rounded-full border border-slate-300 dark:border-slate-600 text-sm font-semibold text-slate-700 dark:text-slate-300  hover:border-indigo-400 hover:text-indigo-600 transition"
+                id="btn_inst_{{ forloop.counter }}">
+                {{ item.universidad.nombre }}
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Tarjetas por institución -->
+    {% for item in data %}
+    <div id="inst_{{ forloop.counter }}" class="inst-panel hidden">
+        {% if item.coordinador %}
+        <div class="max-w-sm bg-white dark:bg-[#1e293b] rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+            
+            <!-- Banner superior -->
+            <div class="h-16 bg-gradient-to-r from-indigo-500 to-purple-600"></div>
+            
+            <!-- Avatar -->
+            <div class="px-6 pb-6">
+                <div class="flex justify-between items-end -mt-8 mb-4">
+                    <div class="w-16 h-16 rounded-full bg-white dark:bg-slate-700 border-4 border-white dark:border-slate-800 shadow flex items-center justify-center text-xl font-bold text-indigo-600">
+                        {{ item.coordinador.first_name|slice:":1"|upper }}{{ item.coordinador.last_name|slice:":1"|upper }}
+                    </div>
+                    <span class="px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold">
+                        Coordinador
+                    </span>
+                </div>
+
+                <!-- Nombre -->
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ item.coordinador.get_full_name }}</h3>
+                <p class="text-xs text-slate-400 font-mono mb-5">@{{ item.coordinador.username }}</p>
+
+                <!-- Datos -->
+                <div class="space-y-3 border-t border-slate-100 dark:border-slate-700 pt-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                            <i class="fa-solid fa-envelope text-xs"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Correo</p>
+                            <p class="text-sm text-slate-700 dark:text-slate-300">{{ item.coordinador.email }}</p>
+                        </div>
+                    </div>
+                    {% if item.coordinador.telefono %}
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                            <i class="fa-solid fa-phone text-xs"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Teléfono</p>
+                            <p class="text-sm text-slate-700 dark:text-slate-300">{{ item.coordinador.telefono }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                            <i class="fa-solid fa-building-columns text-xs"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Institución</p>
+                            <p class="text-sm text-slate-700 dark:text-slate-300">{{ item.universidad.nombre }}</p>
+                        </div>
+                    </div>
+                </div>
+                <a href="{% url 'admin_usuarios' %}?universidad={{ item.universidad.id_universidad }}" 
+                   class="mt-5 w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-white border border-slate-300 text-slate-700 text-sm font-bold transition shadow-md hover:border-indigo-500 hover:text-indigo-500 active:scale-95 duration-150">
+                    <i ></i> Ver Usuarios
+                </a>
+            </div>
+        </div>
+
+        {% else %}
+        <div class="max-w-sm bg-white dark:bg-[#1e293b] rounded-2xl shadow border border-slate-200 dark:border-slate-700 p-8 text-center">
+            <div class="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-3">
+                <i class="fa-solid fa-user-slash text-2xl text-slate-300 dark:text-slate-600"></i>
+            </div>
+            <p class="text-sm font-semibold text-slate-500">Sin coordinador asignado</p>
+            <p class="text-xs text-slate-400 mt-1">{{ item.universidad.nombre }}</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+</div>
+
+<script>
+function mostrarInstitucion(id) {
+    document.querySelectorAll('.inst-panel').forEach(p => p.classList.add('hidden'));
+    document.querySelectorAll('.inst-btn').forEach(b => {
+        b.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600');
+    });
+    document.getElementById(id).classList.remove('hidden');
+    document.getElementById('btn_' + id).classList.add('bg-indigo-600', 'text-white', 'border-indigo-600');
+}
+</script>
+{% endblock %}

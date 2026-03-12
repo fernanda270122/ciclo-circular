@@ -31,6 +31,7 @@ import traceback # Importante para ver errores detallados
 from io import BytesIO
 from datetime import datetime
 
+
 # --- Terceros ---
 import numpy as np
 import docx
@@ -7571,4 +7572,22 @@ def admin_mensajeria(request):
         'base_template': base_template
     })
 
-
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def instituciones_coordinadores(request):
+    universidades = Universidad.objects.all()
+    
+    data = []
+    for uni in universidades:
+        coordinador = Usuario.objects.filter(
+            universidad_coordinador=uni,
+            es_coordinador=True
+        ).first()
+        data.append({
+            'universidad': uni,
+            'coordinador': coordinador
+        })
+    
+    return render(request, 'admin_usuarios/instituciones_coordinadores.html', {
+        'data': data
+    })

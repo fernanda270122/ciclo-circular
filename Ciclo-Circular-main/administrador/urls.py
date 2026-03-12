@@ -25,7 +25,8 @@ from .views import (
     crear_usuario_coordinacion, ver_cv_coordinacion, editar_usuario_coordinacion, eliminar_usuario_coordinacion, 
     resetear_clave_coordinacion, procesamiento_cvs, procesamiento_ofrezco_necesito, cargar_excel_usuarios,
     # Funciones de eventos (Ahora sí están en views.py)
-    gestionar_asistencia, reporte_confirmados, descargar_pdf_confirmados, enviar_recordatorio_pendientes
+    gestionar_asistencia, reporte_confirmados, descargar_pdf_confirmados, enviar_recordatorio_pendientes, 
+    instituciones_coordinadores
 )
 
 urlpatterns = [
@@ -53,6 +54,7 @@ urlpatterns = [
     path('usuarios/cv/<int:user_id>/', ver_cv, name='ver_cv'),
     path('usuarios/cv/descargar/<int:cv_id>/', descargar_cv, name='descargar_cv'),
     path("administrador/cargar_excel/", cargar_excel_usuarios, name="cargar_excel_usuarios"),
+    path("instituciones/coordinadores/", instituciones_coordinadores, name="instituciones_coordinadores"),
     
     # Notificaciones
     path("notificaciones/", notificaciones, name="notificaciones"),
