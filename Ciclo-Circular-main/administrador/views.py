@@ -4925,9 +4925,14 @@ def admin_usuarios(request):
 
             # Consultamos DIRECTAMENTE a Usuario
             # (Asegúrate de que 'carrera' y la relación existen en tu modelo Usuario)
-            usuarios_universidad = Usuario.objects.filter(
+            usuarios_lista = Usuario.objects.filter(
                 carrera__departamento__facultad__universidad=universidad_seleccionada
             ).select_related("carrera").order_by('last_name')
+
+            from django.core.paginator import Paginator
+            paginator = Paginator(usuarios_lista, 10)
+            page_number = request.GET.get('page')
+            usuarios_universidad = paginator.get_page(page_number)
 
             # C. Obtener Coordinador
             if hasattr(Usuario, 'universidad_coordinador'):
@@ -4942,6 +4947,7 @@ def admin_usuarios(request):
         "universidades": universidades,
         "universidad_seleccionada": universidad_seleccionada,
         "usuarios_universidad": usuarios_universidad,
+        "is_paginated": usuarios_universidad.has_other_pages() if usuarios_universidad else False,
         "coordinador_universidad": coordinador_universidad,
         
         # --- VARIABLES OBLIGATORIAS AGREGADAS ---

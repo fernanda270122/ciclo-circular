@@ -253,6 +253,40 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Paginación -->
+                {% if usuarios_universidad.has_other_pages %}
+                <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                    <p class="text-xs text-slate-500">
+                        Mostrando {{ usuarios_universidad.start_index }}–{{ usuarios_universidad.end_index }} de {{ usuarios_universidad.paginator.count }} usuarios
+                    </p>
+                    <div class="flex items-center gap-1">
+                        {% if usuarios_universidad.has_previous %}
+                        <a href="?universidad={{ universidad_seleccionada.id_universidad }}&page={{ usuarios_universidad.previous_page_number }}" 
+                           class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                            <i class="fa-solid fa-chevron-left text-xs"></i>
+                        </a>
+                        {% endif %}
+
+                        {% for num in usuarios_universidad.paginator.page_range %}
+                            {% if usuarios_universidad.number == num %}
+                            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-600 text-white text-xs font-bold">{{ num }}</span>
+                            {% elif num > usuarios_universidad.number|add:'-3' and num < usuarios_universidad.number|add:'3' %}
+                            <a href="?universidad={{ universidad_seleccionada.id_universidad }}&page={{ num }}"
+                               class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition text-xs">{{ num }}</a>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if usuarios_universidad.has_next %}
+                        <a href="?universidad={{ universidad_seleccionada.id_universidad }}&page={{ usuarios_universidad.next_page_number }}"
+                           class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
             </div>
             </div>
     </div>
