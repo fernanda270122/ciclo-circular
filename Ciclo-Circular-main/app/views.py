@@ -64,7 +64,7 @@ import google.generativeai as genai
 print(f"VERSIÓN INSTALADA DE GEMINI: {genai.__version__}")
 
 # Configuración segura: Si falla la variable de entorno, no rompe el deploy
-API_KEY = os.environ.get("GOOGLE_API_KEY", "").strip()
+API_KEY = os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY", "")).strip()
 if API_KEY:
     try:
         genai.configure(api_key=API_KEY)
@@ -1243,6 +1243,50 @@ def subir_cv(request):
         else:
             messages.success(request, "CV analizado por IA exitosamente.")
             
+            # Buscar ofertas con match >= 50% y notificar al usuario
+            try:
+                set_cv = set([str(p).strip().title() for p in palabras if p and p not in ['General', 'None', '']])
+                ofertas_activas = Oferta.objects.filter(activa=True)
+                ofertas_match = []
+
+                for oferta in ofertas_activas:
+                    raw_oferta = [oferta.palabra1, oferta.palabra2, oferta.palabra3, oferta.palabra4, oferta.palabra5]
+                    set_oferta = set([str(p).strip().title() for p in raw_oferta if p and p not in ['General', 'None', '']])
+                    
+                    if not set_oferta:
+                        continue
+                    
+                    coincidencias = set_oferta.intersection(set_cv)
+                    porcentaje = int((len(coincidencias) / len(set_oferta)) * 100)
+                    
+                    if porcentaje >= 50:
+                        ofertas_match.append({
+                            'titulo': oferta.titulo,
+                            'empresa': oferta.empresa,
+                            'match': porcentaje,
+                            'coincidencias': list(coincidencias)
+                        })
+
+                if ofertas_match:
+                    # Construir el correo
+                    asunto = "¡Encontramos ofertas que coinciden con tu CV!"
+                    mensaje = f"Hola {request.user.first_name},\n\n"
+                    mensaje += "Hemos analizado tu CV y encontramos las siguientes ofertas con más del 50% de coincidencia:\n\n"
+                    
+                    for o in ofertas_match:
+                        mensaje += f"✅ {o['titulo']} - {o['empresa']} ({o['match']}% match)\n"
+                        mensaje += f"   Palabras clave: {', '.join(o['coincidencias'])}\n\n"
+                    
+                    mensaje += "\nIngresa a la plataforma para ver los detalles:\n"
+                    mensaje += "https://ciclo-circular.onrender.com/bolsa/oportunidades/\n\n"
+                    mensaje += "Equipo Red Alumni"
+
+                    EmailThread(asunto, mensaje, [request.user.email]).start()
+                    messages.info(request, f"¡Se encontraron {len(ofertas_match)} ofertas con match! Te enviamos un correo.")
+
+            except Exception as e:
+                print(f"Error al buscar matches: {e}")
+            
         return redirect("mi_perfil")
         
     return render(request, "mi_perfil/subir_cv.html")
@@ -2299,14 +2343,13 @@ def mis_oportunidades(request):
         else:
             porcentaje = 0
 
-        # Filtro: Mostrar solo si hay match (> 0%)
-        if porcentaje > 0:
-            lista_matches.append({
-                'oferta': oferta, 
-                'match': porcentaje,
-                'coincidencias': list(coincidencias), # IMPORTANTE: Lista de palabras coincidentes
-                'todas_tags': list(set_oferta)        # IMPORTANTE: Lista de tags de la oferta
-            })
+        # Mostrar todas las ofertas, con o sin match
+        lista_matches.append({
+            'oferta': oferta, 
+            'match': porcentaje,
+            'coincidencias': list(coincidencias),
+            'todas_tags': list(set_oferta)
+        })
 
     lista_matches.sort(key=lambda x: x['match'], reverse=True)
     
@@ -2369,12 +2412,26 @@ def editar_oferta(request, oferta_id):
             oferta.modalidad = request.POST.get('modalidad', oferta.modalidad)
             oferta.jornada = request.POST.get('jornada', oferta.jornada)
             oferta.salario = request.POST.get('salario', oferta.salario)
-            oferta.palabra1 = request.POST.get('palabra1', oferta.palabra1)
-            oferta.palabra2 = request.POST.get('palabra2', oferta.palabra2)
-            oferta.palabra3 = request.POST.get('palabra3', oferta.palabra3)
-            oferta.palabra4 = request.POST.get('palabra4', oferta.palabra4)
-            oferta.palabra5 = request.POST.get('palabra5', oferta.palabra5)
             oferta.activa = request.POST.get('activa') == 'on'
+
+            # Generar palabras clave automáticamente con IA
+            try:
+                texto_para_ia = f"{oferta.titulo} {oferta.descripcion} {oferta.requisitos or ''}"
+                palabras = _obtener_keywords_gemini(texto_para_ia, 5)
+                oferta.palabra1 = palabras[0] if len(palabras) > 0 else None
+                oferta.palabra2 = palabras[1] if len(palabras) > 1 else None
+                oferta.palabra3 = palabras[2] if len(palabras) > 2 else None
+                oferta.palabra4 = palabras[3] if len(palabras) > 3 else None
+                oferta.palabra5 = palabras[4] if len(palabras) > 4 else None
+            except Exception as e:
+                print(f"⚠️ Error IA palabras clave: {e}")
+                # Si falla la IA, usar las palabras manuales
+                oferta.palabra1 = request.POST.get('palabra1', oferta.palabra1)
+                oferta.palabra2 = request.POST.get('palabra2', oferta.palabra2)
+                oferta.palabra3 = request.POST.get('palabra3', oferta.palabra3)
+                oferta.palabra4 = request.POST.get('palabra4', oferta.palabra4)
+                oferta.palabra5 = request.POST.get('palabra5', oferta.palabra5)
+
             oferta.save()
             messages.success(request, "Oferta actualizada correctamente.")
             
