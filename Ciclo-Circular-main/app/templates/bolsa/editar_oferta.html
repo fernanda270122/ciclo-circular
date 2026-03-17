@@ -12,42 +12,94 @@
                 </div>
                 Editar Oferta Laboral
             </h2>
-            
             {% if request.user.is_staff %}
-                <a href="{% url 'gestion-bolsa' %}" class="group flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-emerald-500 hover:text-emerald-600 transition shadow-sm text-sm font-medium">
-                    <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
-                    Volver
-                </a>
+            <a href="{% url 'gestion-bolsa' %}" class="group flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-emerald-500 hover:text-emerald-600 transition shadow-sm text-sm font-medium">
+                <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i> Volver
+            </a>
             {% else %}
-                <a href="{% url 'mis_ofertas' %}" class="group flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-emerald-500 hover:text-emerald-600 transition shadow-sm text-sm font-medium">
-                    <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
-                    Volver
-                </a>
+            <a href="{% url 'mis_ofertas' %}" class="group flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-emerald-500 hover:text-emerald-600 transition shadow-sm text-sm font-medium">
+                <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i> Volver
+            </a>
             {% endif %}
         </div>
 
-        <form method="POST" class="p-8" x-data="{ loading: false }" @submit="loading = true">
+        <form method="POST" class="p-8 space-y-6" x-data="{ loading: false }" @submit="loading = true">
             {% csrf_token %}
             
-            <div class="mb-6">
-                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">
-                    Descripción y Requisitos del Puesto
-                </label>
-                <div class="relative">
-                    <textarea name="texto_oferta" rows="10" required 
-                        class="w-full p-5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition text-base leading-relaxed shadow-inner"
-                        placeholder="Describe el puesto..."
-                    >{{ oferta.texto_oferta }}</textarea>
-                    
-                    <div class="absolute bottom-4 right-4 text-slate-400 text-xs bg-white dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-600 shadow-sm">
-                        <i class="fa-solid fa-robot mr-1"></i> La IA regenerará los tags al guardar
-                    </div>
+            <!-- Título y Empresa -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Título del Puesto</label>
+                    <input type="text" name="titulo" value="{{ oferta.titulo }}" required
+                        class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Empresa</label>
+                    <input type="text" name="empresa" value="{{ oferta.empresa }}" required
+                        class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition text-sm">
                 </div>
             </div>
 
-            <div class="mb-8 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800/50">
+            <!-- Descripción -->
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Descripción</label>
+                <textarea name="descripcion" rows="5" required
+                    class="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition text-sm">{{ oferta.descripcion }}</textarea>
+            </div>
+
+            <!-- Requisitos -->
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Requisitos</label>
+                <textarea name="requisitos" rows="3"
+                    class="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition text-sm">{{ oferta.requisitos }}</textarea>
+            </div>
+
+            <!-- Modalidad, Jornada, Salario, Ubicación -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Modalidad</label>
+                    <select name="modalidad" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition text-sm">
+                        <option value="presencial" {% if oferta.modalidad == 'presencial' %}selected{% endif %}>Presencial</option>
+                        <option value="remoto" {% if oferta.modalidad == 'remoto' %}selected{% endif %}>Remoto</option>
+                        <option value="hibrido" {% if oferta.modalidad == 'hibrido' %}selected{% endif %}>Híbrido</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Jornada</label>
+                    <select name="jornada" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition text-sm">
+                        <option value="completa" {% if oferta.jornada == 'completa' %}selected{% endif %}>Jornada Completa</option>
+                        <option value="parcial" {% if oferta.jornada == 'parcial' %}selected{% endif %}>Jornada Parcial</option>
+                        <option value="practica" {% if oferta.jornada == 'practica' %}selected{% endif %}>Práctica</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Salario</label>
+                    <input type="text" name="salario" value="{{ oferta.salario|default:'' }}"
+                        class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition text-sm"
+                        placeholder="Ej: $800.000 - $1.200.000">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Ubicación</label>
+                    <input type="text" name="ubicacion" value="{{ oferta.ubicacion|default:'' }}"
+                        class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition text-sm"
+                        placeholder="Ej: Santiago, Chile">
+                </div>
+            </div>
+
+            <!-- Estado activa/inactiva -->
+            <div class="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                <input type="checkbox" name="activa" id="activa" {% if oferta.activa %}checked{% endif %}
+                    class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                <label for="activa" class="text-sm font-bold text-slate-700 dark:text-slate-300">
+                    Oferta Activa
+                    <span class="text-xs font-normal text-slate-400 ml-2">(Las ofertas inactivas no se muestran a los usuarios)</span>
+                </label>
+            </div>
+
+            <!-- Palabras clave actuales -->
+            <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800/50">
                 <p class="text-xs text-blue-600 dark:text-blue-300 font-bold mb-2 flex items-center gap-2">
-                    <i class="fa-solid fa-tags"></i> Etiquetas Actuales (Se actualizarán automáticamente)
+                    <i class="fa-solid fa-robot"></i> Palabras clave (se generan automáticamente con IA al guardar)
                 </p>
                 <div class="flex flex-wrap gap-2">
                     {% if oferta.palabra1 %}<span class="px-2 py-1 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs rounded border border-slate-200 dark:border-slate-600">{{ oferta.palabra1 }}</span>{% endif %}
@@ -58,22 +110,17 @@
                 </div>
             </div>
 
+            <!-- Botón guardar -->
             <div class="flex justify-end gap-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                 <button type="submit" 
                     :disabled="loading"
                     :class="loading ? 'opacity-75 cursor-not-allowed' : 'hover:bg-emerald-700'"
                     class="bg-emerald-600 text-white font-bold py-3 px-8 rounded-xl transition shadow-lg shadow-emerald-500/30 flex items-center gap-2">
-                    
                     <template x-if="!loading">
-                        <span class="flex items-center gap-2">
-                            <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios
-                        </span>
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-floppy-disk"></i> Guardar Cambios</span>
                     </template>
-
                     <template x-if="loading">
-                        <span class="flex items-center gap-2">
-                            <i class="fa-solid fa-circle-notch fa-spin"></i> Procesando IA...
-                        </span>
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-circle-notch fa-spin"></i> Procesando IA...</span>
                     </template>
                 </button>
             </div>
