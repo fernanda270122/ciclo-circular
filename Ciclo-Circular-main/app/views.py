@@ -1390,7 +1390,7 @@ def guardar_oferta(request):
             # CORRECCIÓN CRÍTICA:
             # Usamos .filter().last() para evitar el error "MultipleObjectsReturned"
             # si ya existen registros previos.
-            oferta = Oferta.objects.filter(usuario=request.user).last()
+            oferta = Oferta.objects.filter(creado_por=request.user).last()
             
             if not oferta:
                 # Si no existe ninguna, creamos una instancia nueva
@@ -2250,8 +2250,10 @@ def crear_oferta_laboral(request):
 
                 # 2. Crear nueva oferta
                 Oferta.objects.create(
-                    usuario=request.user, 
-                    texto_oferta=texto,
+                    creado_por=request.user,
+                    titulo="Oferta Laboral",
+                    empresa="Sin empresa",
+                    descripcion=texto,
                     palabra1=kw[0], palabra2=kw[1], palabra3=kw[2], palabra4=kw[3], palabra5=kw[4]
                 )
                 messages.success(request, "Oferta publicada y procesada.")
@@ -2264,7 +2266,7 @@ def crear_oferta_laboral(request):
              raise Exception("Error: Faltan importar los modelos Oferta o CVUsuario.")
 
         # 1. Mis Ofertas
-        mis_ofertas = Oferta.objects.filter(usuario=request.user).order_by('-creado')
+        mis_ofertas = Oferta.objects.filter(creado_por=request.user).order_by('-creado')
         
         # 2. CVs de los demás
         otros_cvs = CVUsuario.objects.exclude(usuario=request.user)
@@ -2698,7 +2700,7 @@ def editar_oferta(request, oferta_id):
             # 🔥 Ejecutar IA en segundo plano (NO bloquea)
             def generar_keywords_background(oferta_id):
                 try:
-                    oferta_bg = Oferta.objects.get(id=oferta_id)
+                    oferta_bg = Oferta.objects.get(id_oferta=oferta_id)
                     texto = f"{oferta_bg.titulo} {oferta_bg.descripcion} {oferta_bg.requisitos or ''}"
 
                     palabras = _obtener_keywords_gemini(texto, 5)
@@ -2719,7 +2721,7 @@ def editar_oferta(request, oferta_id):
 
             threading.Thread(
                 target=generar_keywords_background,
-                args=(oferta.id,)
+                args=(oferta.id_oferta,)
             ).start()
 
             messages.success(request, "Oferta actualizada correctamente.")
@@ -3355,6 +3357,7 @@ def iniciar_pago_membresia(request, plan_id):
     }
     
     preference_response = sdk.preference().create(preference_data)
-    init_point = preference_response["response"]["init_point"]
-    
-    return redirect(init_point)
+    init_point = preference_response.get("response", {}).get("init_point")
+    if not init_point:
+        messages.error(request, "No se pudo iniciar el pago. Contacta al administrador.")
+        return redirect('mi_membresia')

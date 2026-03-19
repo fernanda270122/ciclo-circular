@@ -86,9 +86,13 @@
                             </div>
                         </div>
                         
-                        <h3 class="text-lg font-medium text-slate-800 dark:text-white italic mb-4">
-                            "{{ item.oferta.texto_oferta }}"
+                        <h3 class="text-base font-bold text-slate-800 dark:text-white mb-1">
+                            {{ item.oferta.titulo }}
                         </h3>
+                        <p class="text-sm text-slate-500 mb-1">{{ item.oferta.empresa }}</p>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 italic mb-4 line-clamp-2">
+                            "{{ item.oferta.descripcion }}"
+                        </p>
 
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="text-[10px] font-bold text-slate-400 uppercase mr-2">Tags IA:</span>
