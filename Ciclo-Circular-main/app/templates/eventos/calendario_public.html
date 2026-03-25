@@ -23,8 +23,8 @@
     }
 </style>
 
-<div x-data="{ modalOpen: false, showQuestions: false, event: { extendedProps: {} }, badgeData: {}, myStatus: null }" 
-     @open-calendar-event.window="modalOpen = true; showQuestions = false; event = $event.detail.event; badgeData = $event.detail.badge; myStatus = $event.detail.status;"
+<div x-data="{ modalOpen: false, showQuestions: false, mensajesLista: [], preguntasLista: [], respuestasLista: [], event: { extendedProps: {} }, badgeData: {}, myStatus: null }" 
+     @open-calendar-event.window="modalOpen = true; showQuestions = false; preguntasLista = []; respuestasLista = []; event = $event.detail.event; badgeData = $event.detail.badge; myStatus = $event.detail.status;"
      @contador-actualizado.window="if(event && event.id == $event.detail.id) { event[$event.detail.prop] = $event.detail.val; }"
      class="space-y-6 pt-6 md:pt-0">
     
@@ -99,46 +99,116 @@
                     </div>
                 </div>
 
-                <div x-show="showQuestions" style="display: none;" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
-                    <div class="px-6 py-6 bg-slate-50 dark:bg-[#0f172a]">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                            <div class="bg-white dark:bg-[#1e293b] p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-                                <div class="flex items-center gap-2 mb-3 text-emerald-600 dark:text-emerald-400 font-bold">
-                                    <i class="fa-regular fa-pen-to-square"></i><h3>Pregunta al expositor</h3>
+                <div x-show="showQuestions" style="display: none;" x-transition:enter="transition ease-out duration-200" class="px-6 py-6 bg-slate-50 dark:bg-[#0f172a]">
+                        <div class="max-w-2xl mx-auto bg-white dark:bg-[#1e293b] rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col h-[450px]">
+                            
+                            <div class="flex justify-between items-center px-4 pt-3 pb-1">
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Chat del evento</span>
+                                <button type="button"
+                                    @click="if(confirm('¿Terminar y limpiar el chat? Los mensajes se eliminarán de la vista pero quedarán disponibles para descarga en Excel.')){
+                                        fetch('/evento/' + event.id + '/limpiar-chat/', { method: 'POST', headers: {'X-CSRFToken': document.cookie.match(/csrftoken=([^;]+)/)[1]} })
+                                        .then(r => r.json())
+                                        .then(d => { if(d.status === 'success'){ mensajesLista = []; preguntasLista = []; respuestasLista = []; } })
+                                    }"
+                                    class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold transition border border-red-100">
+                                    <i class="fa-solid fa-broom"></i> Terminar Chat
+                                </button>
+                            </div>
+                            <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col scroll-smooth bg-slate-50/50 dark:bg-slate-900/50">
+                                <div class="flex justify-start w-full">
+                                    <div class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 p-3 rounded-2xl rounded-tl-none text-sm max-w-[85%] border border-slate-200 dark:border-slate-700 italic">
+                                        <span x-text="event.pregunta_del_coordinador"></span>
+                                    </div>
                                 </div>
-                                <form hx-post="/api/preguntas/enviar/" hx-swap="none">
+
+                                <template x-for="m in mensajesLista" :key="m.id">
+                                    <div :class="m.tipo === 'expositor' ? 'flex justify-end w-full' : 'flex justify-start w-full'">
+                                        <div :class="m.tipo === 'expositor' ? 'bg-emerald-600 text-white p-3 rounded-2xl rounded-tr-none shadow-sm max-w-[85%]' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl rounded-tl-none shadow-sm max-w-[85%]'">
+                                            <p x-show="m.tipo === 'publico'" class="text-[10px] font-bold text-emerald-600 uppercase mb-1">Público</p>
+                                            <p class="text-sm" :class="m.tipo === 'expositor' ? 'text-white' : 'text-slate-700 dark:text-slate-200'" x-text="m.texto"></p>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="p-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-[#1e293b]">
+                                <form hx-post="/api/preguntas/enviar/" 
+                                    hx-swap="none"
+                                    @htmx:after-request="
+                                        //1. Limpiamos el texto a la fuerza
+                                        $el.querySelector('textarea').value = '';
+                                        
+                                        //2. Cargamos inmediatamente para mostrar la pregunta
+                                        const recargar = () => fetch('/preguntas/' + event.id + '/')
+                                            .then(response => response.json())
+                                            .then(data => { 
+                                                mensajesLista = data.mensajes;
+                                                preguntasLista = data.preguntas; 
+                                                respuestasLista = data.respuestas;
+                                                $nextTick(() => { 
+                                                    const container = document.getElementById('chat-container');
+                                                    if(container) container.scrollTop = container.scrollHeight;
+                                                });
+                                                return data;
+                                            });
+                                        recargar();
+                                        // 3. Polling cada 2 segundos hasta que llegue respuesta IA (máximo 15 seg)
+                                        let intentos = 0;
+                                        const conteoAntes = mensajesLista.length;
+                                        const polling = setInterval(() => {
+                                            intentos++;
+                                            recargar().then(() => {
+                                                if (mensajesLista.length > conteoAntes + 1 || intentos >= 7) {
+                                                    clearInterval(polling);
+                                                }
+                                            });
+                                        }, 2000);
+                                    ">
                                     {% csrf_token %}
                                     <input type="hidden" name="evento_id" :value="event.id">
                                     <input type="hidden" name="tipo" value="expositor">
-                                    <textarea name="texto" rows="4" required class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-slate-600 rounded-xl p-3 text-sm focus:ring-2 focus:ring-emerald-500 resize-none transition" placeholder="Escribe tu pregunta..."></textarea>
-                                    <button type="submit" class="mt-4 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition transform hover:-translate-y-0.5">Enviar</button>
+                                    
+                                    <div class="flex gap-2 items-center" x-data="{ enviando: false }">
+                                        <textarea name="texto" rows="1" required 
+                                                class="flex-1 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-emerald-500 resize-none transition" 
+                                                placeholder="Escribe tu pregunta..."
+                                                @keydown.enter.prevent="if(!enviando){ $el.closest('form').dispatchEvent(new Event('submit-manual')) }"></textarea>
+                                        <button type="button" :disabled="enviando"
+                                                @click="
+                                                    const form = $el.closest('form');
+                                                    const textarea = form.querySelector('textarea');
+                                                    const texto = textarea.value.trim();
+                                                    if(!texto) return;
+                                                    enviando = true;
+                                                    const formData = new FormData(form);
+                                                    fetch('/api/preguntas/enviar/', { method: 'POST', body: formData })
+                                                        .then(() => {
+                                                            textarea.value = '';
+                                                            // Recargar inmediatamente
+                                                            fetch('/preguntas/' + event.id + '/').then(r=>r.json()).then(d=>{ mensajesLista=d.mensajes; preguntasLista=d.preguntas; respuestasLista=d.respuestas; $nextTick(()=>{ const c=document.getElementById('chat-container'); if(c) c.scrollTop=c.scrollHeight; }); });
+                                                            // Polling para respuesta IA
+                                                            let intentos = 0;
+                                                            const antes = mensajesLista.length;
+                                                            const poll = setInterval(() => {
+                                                                intentos++;
+                                                                fetch('/preguntas/' + event.id + '/').then(r=>r.json()).then(d=>{ 
+                                                                    mensajesLista=d.mensajes; 
+                                                                    preguntasLista=d.preguntas; 
+                                                                    respuestasLista=d.respuestas;
+                                                                    $nextTick(()=>{ const c=document.getElementById('chat-container'); if(c) c.scrollTop=c.scrollHeight; });
+                                                                    if(d.mensajes.length > antes + 1 || intentos >= 8){ clearInterval(poll); enviando=false; }
+                                                                });
+                                                            }, 2000);
+                                                        });
+                                                "
+                                                class="h-10 w-10 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition flex items-center justify-center disabled:opacity-50">
+                                            <i class="fa-solid" :class="enviando ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+                                        </button>
+                                    </div>
                                 </form>
-                            </div>
-
-                            <div class="bg-white dark:bg-[#1e293b] p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 relative overflow-hidden">
-                                <div class="absolute top-0 right-0 p-2 opacity-5 text-emerald-600 pointer-events-none"><i class="fa-solid fa-comments text-6xl"></i></div>
-                                <div class="relative z-10">
-                                    <div class="flex items-center gap-2 mb-2 text-emerald-600 dark:text-emerald-400 font-bold">
-                                        <i class="fa-solid fa-reply"></i> <h3>Responde al expositor</h3>
-                                    </div>
-                                    <div class="mb-4 p-3 bg-emerald-50 dark:bg-emerald-900/20 border-l-4 border-emerald-500 rounded-r-lg">
-                                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200 italic">
-                                            "<span x-text="event.pregunta_del_coordinador || 'El expositor aun no ha hecho ninguna pregunta'"></span>"
-                                        </p>
-                                    </div>
-                                    <form hx-post="/api/preguntas/enviar/" hx-swap="none">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="evento_id" :value="event.id">
-                                        <input type="hidden" name="tipo" value="publico">
-                                        <textarea name="texto" rows="2" required class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-slate-600 rounded-xl p-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none transition" placeholder="Tu respuesta..."></textarea>
-                                        <button type="submit" class="mt-4 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition transform hover:-translate-y-0.5">Enviar Respuesta</button>
-                                    </form>
-                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-
                 <div class="bg-gray-50 dark:bg-gray-800/50 px-6 py-4 border-t border-gray-100 dark:border-gray-700 transition-colors">
                     <div class="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-3">
                         
@@ -176,11 +246,25 @@
 
                         <div class="flex gap-2 w-full md:w-auto justify-end">
                             <button type="button" 
-                                    @click="showQuestions = !showQuestions" 
-                                    class="flex-1 md:flex-none inline-flex justify-center rounded-lg px-4 py-2.5 text-sm font-bold shadow-sm ring-1 ring-inset transition items-center gap-2"
-                                    :class="showQuestions ? 'bg-slate-200 text-slate-700 ring-slate-300 hover:bg-slate-300' : 'bg-white text-emerald-600 ring-emerald-200 hover:bg-emerald-50 hover:text-emerald-700'">
-                                <i class="fa-solid" :class="showQuestions ? 'fa-arrow-left' : 'fa-comments'"></i>
-                                <span x-text="showQuestions ? 'Volver al Evento' : 'Preguntas'"></span>
+                                    x-show="!showQuestions"
+                                    @click="
+                                        preguntasLista = []; // <--- LIMPIEZA PREVENTIVA
+                                        respuestasLista = []; // <--- LIMPIEZA PREVENTIVA
+                                        showQuestions = true; 
+                                        fetch('/preguntas/' + event.id + '/')
+                                            .then(r => r.json())
+                                            .then(d => { 
+                                                mensajesLista = d.mensajes;
+                                                preguntasLista = d.preguntas; 
+                                                respuestasLista = d.respuestas; 
+                                                $nextTick(() => { 
+                                                    const c = document.getElementById('chat-container');
+                                                    if(c) c.scrollTop = c.scrollHeight;
+                                                });
+                                            })" 
+                                    class="flex-1 md:flex-none inline-flex justify-center rounded-lg px-4 py-2.5 text-sm font-bold shadow-sm ring-1 ring-inset ring-emerald-200 bg-white text-emerald-600 hover:bg-emerald-50 transition items-center gap-2">
+                                <i class="fa-solid fa-comments"></i>
+                                <span>Preguntas</span>
                             </button>
 
                             <button type="button" @click="modalOpen = false" class="flex-1 md:flex-none inline-flex justify-center rounded-lg bg-white dark:bg-white/5 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-gray-300 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-white/10 transition">
@@ -264,7 +348,7 @@
                     const props = info.event.extendedProps;
                     
                     let p_coord = props.pregunta_del_coordinador;
-                    if (!p_coord || p_coord === "null" || p_coord.trim() === "") p_coord = "El expositor aun no ha hecho ninguna pregunta";
+                    if (!p_coord || p_coord === "null" || p_coord.trim() === "") p_coord = "¡Bienvenido al chat! Escribe tu pregunta.";
 
                     const eventData = {
                         id: info.event.id || props.id_evento || props.id,

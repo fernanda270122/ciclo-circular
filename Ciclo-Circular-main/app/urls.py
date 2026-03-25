@@ -102,6 +102,8 @@ urlpatterns = [
     path('api/guardar_evento/', views.guardar_evento, name='guardar_evento'), 
     path('api/eliminar_evento/', views.eliminar_evento, name='eliminar_evento'),
     
+    
+    
     # Rutas Eventos (Líneas separadas correctamente)
     path('evento/<int:evento_id>/asistencia/', views.gestionar_asistencia, name='gestionar_asistencia'),
     path('evento/enviar/<int:evento_id>/', views.enviar_solicitud_confirmacion, name='enviar_solicitud_confirmacion'),
@@ -133,6 +135,7 @@ urlpatterns = [
     path('mi-calendario/', views.ver_calendario_view, name='ver_calendario'),
     path('ping/', views.ping),
     
+    path('preguntas/<int:evento_id>/', views.listar_preguntas, name='listar_preguntas'),
     # Esta es la ruta nueva exclusiva para el portal de administración
     
     path('cron/recordatorios/<str:token>/', views.ejecutar_recordatorios_cron, name='cron_recordatorios'),
@@ -181,4 +184,15 @@ urlpatterns = [
     path('networking/necesidad/editar/<int:necesidad_id>/', views.editar_networking_necesidad, name='editar_networking_necesidad'),
     path('networking/necesidad/eliminar/<int:necesidad_id>/', views.eliminar_networking_necesidad, name='eliminar_networking_necesidad'),
     path('networking/necesidad/ver/<int:necesidad_id>/', views.ver_necesidad, name='ver_necesidad'),
+    
+    # DESCARGA DE EXCEL PARA PREGUNTAS EN EVENTOS 
+    path('evento/<int:evento_id>/descargar-historial/', views.descargar_historial_evento, name='descargar_historial_evento'),
+    
+    #ELIMINAR HISTORIAL DE CHAT DEDSPUES DE 30 DIAS
+    path('cron/limpiar-historial/<str:token>/', views.limpiar_historial_cron, name='limpiar_historial_cron'),
+    
+    #PANEL COORDINADOR PARA DESCARGA DE EXCEL
+    path('panel-coordinador/', views.panel_coordinador, name='panel_coordinador'),
+    
+    path('evento/<int:evento_id>/limpiar-chat/', views.limpiar_chat_evento, name='limpiar_chat_evento'),
     ]

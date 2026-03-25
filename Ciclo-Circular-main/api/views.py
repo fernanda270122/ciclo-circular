@@ -133,7 +133,76 @@ def enviar_pregunta_api(request):
             elif tipo == 'publico':
                 Evento.objects.filter(pk=evento.pk).update(contador_aportes=F('contador_aportes') + 1)
 
-            # Retornamos un HTML vacío o un mensaje de éxito pequeño
+            # 3. Si es pregunta al expositor, generar respuesta automática con IA
+            if tipo == 'expositor':
+                import threading
+                def generar_respuesta_ia(evento_id, pregunta_texto):
+                    try:
+                        print(f"🤖 Iniciando respuesta IA para evento {evento_id}")
+                        evento_obj = Evento.objects.get(pk=evento_id)
+                        
+                        preguntas_anteriores = PreguntaEvento.objects.filter(
+                            evento=evento_obj,
+                            tipo='expositor'
+                        ).exclude(texto=pregunta_texto).values_list('texto', flat=True)[:5]
+                        
+                        contexto_evento = f"""
+                        Evento: {evento_obj.titulo}
+                        Descripción: {evento_obj.descripcion or 'Sin descripción'}
+                        Pregunta del coordinador: {evento_obj.pregunta_del_coordinador or ''}
+                        """
+                        
+                        preguntas_ctx = "\n".join(preguntas_anteriores) if preguntas_anteriores else "No hay preguntas anteriores"
+                        
+                        prompt = f"""
+                        Eres el expositor de un evento académico. Responde la siguiente pregunta de forma breve, clara y profesional (máximo 2 oraciones).
+                        
+                        Contexto del evento:
+                        {contexto_evento}
+                        
+                        Preguntas similares de otros asistentes:
+                        {preguntas_ctx}
+                        
+                        Pregunta a responder: {pregunta_texto}
+                        
+                        Si la pregunta es similar a las anteriores, da una respuesta genérica que aplique a todos.
+                        Responde solo con el texto de la respuesta, sin saludos ni firmas.
+                        """
+                        
+                        api_key = getattr(settings, 'GOOGLE_API_KEY', None) or getattr(settings, 'GEMINI_API_KEY', None)
+                        if not api_key:
+                            print("⚠️ No hay API key de Gemini")
+                            return
+                        
+                        genai.configure(api_key=api_key)
+                        modelos = []
+                        for m in genai.list_models():
+                            if 'generateContent' in m.supported_generation_methods:
+                                modelos.append(m.name)
+                        
+                        modelo = next((m for m in modelos if 'flash' in m), modelos[0] if modelos else None)
+                        if not modelo:
+                            print("⚠️ No hay modelos disponibles")
+                            return
+                        
+                        model = genai.GenerativeModel(modelo)
+                        response = model.generate_content(prompt)
+                        respuesta_texto = response.text.strip()
+                        
+                        if respuesta_texto:
+                            PreguntaEvento.objects.create(
+                                evento=evento_obj,
+                                tipo='publico',
+                                texto=f"🤖 {respuesta_texto}"
+                            )
+                            Evento.objects.filter(pk=evento_id).update(contador_aportes=F('contador_aportes') + 1)
+                            print(f"✅ Respuesta IA guardada para evento {evento_id}")
+                            
+                    except Exception as e:
+                        print(f"⚠️ Error IA respuesta automática: {e}")
+                
+                threading.Thread(target=generar_respuesta_ia, args=(evento_id, texto)).start()
+
             return HttpResponse('<div class="text-emerald-500 text-xs font-bold mt-2 text-center fade-out">¡Enviado con éxito!</div>')
     
     return HttpResponse('Error', status=400)
@@ -318,3 +387,4 @@ def networking_ofertas_list(request):
     ofertas = Oferta.objects.all()
     serializer = OfertaSerializer(ofertas, many=True)
     return Response(serializer.data)
+

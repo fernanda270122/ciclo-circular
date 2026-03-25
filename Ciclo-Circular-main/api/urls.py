@@ -18,4 +18,5 @@ urlpatterns = [
     # Networking
     path('networking/ofertas/', networking_ofertas_list, name='api_networking_ofertas'),
     path('networking/ofertas/<int:pk>/', networking_ver_oferta, name='api_networking_ver_oferta'),
+     
 ]

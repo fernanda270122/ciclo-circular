@@ -5742,13 +5742,17 @@ def quitar_coordinador(request, user_id):
 @login_required
 def panel_coordinador(request):
     usuario = request.user
-    # Validar que sea coordinador y tenga universidad asignada
     if not usuario.es_coordinador or not usuario.universidad_coordinador:
         return redirect('home') 
 
-    # Renderiza el menú intermedio
+    from app.models import Evento
+    eventos = Evento.objects.filter(
+        universidad=usuario.universidad_coordinador
+    ).order_by('-inicio')
+
     return render(request, "administrador/panel_coordinador.html", {
         "universidad": usuario.universidad_coordinador,
+        "eventos": eventos,
     })
 
 

@@ -48,5 +48,32 @@
         </a>
 
     </div>
+
+    {% if eventos %}
+    <div class="bg-white dark:bg-[#1e293b] rounded-2xl border border-gray-200 dark:border-white/10 shadow-md p-6">
+        <h4 class="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-file-excel text-emerald-500"></i> Descargar Historial de Preguntas
+        </h4>
+        <div class="space-y-3">
+            {% for evento in eventos %}
+            <div class="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <div>
+                    <p class="font-bold text-slate-800 dark:text-white text-sm">{{ evento.titulo }}</p>
+                    <p class="text-xs text-slate-500 mt-1">
+                        <i class="fa-regular fa-clock mr-1"></i>{{ evento.inicio|date:"d M Y H:i" }}
+                        <span class="mx-2">·</span>
+                        <i class="fa-solid fa-comments mr-1 text-emerald-500"></i>{{ evento.contador_preguntas }} preguntas
+                    </p>
+                </div>
+                <a href="{% url 'descargar_historial_evento' evento.pk %}" 
+                   class="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition">
+                    <i class="fa-solid fa-download"></i> Excel
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
 </div>
 {% endblock %}

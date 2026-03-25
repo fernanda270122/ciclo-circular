@@ -1771,7 +1771,18 @@ def guardar_evento(request):
     except Exception as e:
         print(f"Error en guardar_evento: {e}") 
         return JsonResponse({'status': 'error', 'message': f"Error interno: {str(e)}"})
+
+@login_required
+def listar_preguntas(request, evento_id):
+    mensajes = PreguntaEvento.objects.filter(
+        evento_id=evento_id
+    ).order_by('fecha_creacion').values('id', 'texto', 'tipo', 'fecha_creacion')
     
+    return JsonResponse({
+        'mensajes': list(mensajes),
+        'preguntas': [m for m in mensajes if m['tipo'] == 'expositor'],
+        'respuestas': [m for m in mensajes if m['tipo'] == 'publico'],
+    })
     
 @login_required
 def eliminar_evento(request):
@@ -2873,18 +2884,89 @@ def enviar_pregunta(request):
 
         evento = get_object_or_404(Evento, pk=evento_id)
         
-        # 1. Guardar la pregunta en el historial para la IA
+        # 1. Guardar la pregunta
         PreguntaEvento.objects.create(
             evento=evento,
             tipo=tipo,
             texto=texto
         )
         
-        # 2. ¡EL PASO CLAVE! Sumar +1 al contador en la Base de Datos
+        # 2. Sumar +1 al contador
         if tipo == 'expositor':
             Evento.objects.filter(pk=evento.pk).update(contador_preguntas=F('contador_preguntas') + 1)
         else:
             Evento.objects.filter(pk=evento.pk).update(contador_aportes=F('contador_aportes') + 1)
+
+        # 3. Si es pregunta al expositor, generar respuesta automática con IA
+        if tipo == 'expositor':
+            import threading
+            def generar_respuesta_ia(evento_id, pregunta_texto):
+                try:
+                    print(f"🤖 Iniciando respuesta IA para evento {evento_id}")
+                    import google.generativeai as genai
+                    from django.conf import settings
+                    
+                    evento_obj = Evento.objects.get(pk=evento_id)
+                    
+                    # Obtener preguntas similares anteriores para respuestas genéricas
+                    preguntas_anteriores = PreguntaEvento.objects.filter(
+                        evento=evento_obj,
+                        tipo='expositor'
+                    ).exclude(texto=pregunta_texto).values_list('texto', flat=True)[:5]
+                    
+                    contexto_evento = f"""
+                    Evento: {evento_obj.titulo}
+                    Descripción: {evento_obj.descripcion or 'Sin descripción'}
+                    Pregunta del coordinador: {evento_obj.pregunta_del_coordinador or ''}
+                    """
+                    
+                    preguntas_ctx = "\n".join(preguntas_anteriores) if preguntas_anteriores else "No hay preguntas anteriores"
+                    
+                    prompt = f"""
+                    Eres el expositor de un evento académico. Responde la siguiente pregunta de forma breve, clara y profesional (máximo 2 oraciones).
+                    
+                    Contexto del evento:
+                    {contexto_evento}
+                    
+                    Preguntas similares de otros asistentes:
+                    {preguntas_ctx}
+                    
+                    Pregunta a responder: {pregunta_texto}
+                    
+                    Si la pregunta es similar a las anteriores, puedes dar una respuesta genérica que aplique a todos.
+                    Responde solo con el texto de la respuesta, sin saludos ni firmas.
+                    """
+                    
+                    api_key = getattr(settings, 'GOOGLE_API_KEY', None) or getattr(settings, 'GEMINI_API_KEY', None)
+                    if not api_key:
+                        return
+                    
+                    genai.configure(api_key=api_key)
+                    modelos = []
+                    for m in genai.list_models():
+                        if 'generateContent' in m.supported_generation_methods:
+                            modelos.append(m.name)
+                    
+                    modelo = next((m for m in modelos if 'flash' in m), modelos[0] if modelos else None)
+                    if not modelo:
+                        return
+                    
+                    model = genai.GenerativeModel(modelo)
+                    response = model.generate_content(prompt)
+                    respuesta_texto = response.text.strip()
+                    
+                    if respuesta_texto:
+                        PreguntaEvento.objects.create(
+                            evento=evento_obj,
+                            tipo='publico',
+                            texto=f"🤖 {respuesta_texto}"
+                        )
+                        Evento.objects.filter(pk=evento_id).update(contador_aportes=F('contador_aportes') + 1)
+                        
+                except Exception as e:
+                    print(f"⚠️ Error IA respuesta automática: {e}")
+            
+            threading.Thread(target=generar_respuesta_ia, args=(evento_id, texto)).start()
 
         return JsonResponse({'status': 'success'})
         
@@ -3361,3 +3443,74 @@ def iniciar_pago_membresia(request, plan_id):
     if not init_point:
         messages.error(request, "No se pudo iniciar el pago. Contacta al administrador.")
         return redirect('mi_membresia')
+
+#Descargar historial en exel
+@login_required
+def descargar_historial_evento(request, evento_id):
+    import openpyxl
+    from django.http import HttpResponse
+    
+    evento = get_object_or_404(Evento, pk=evento_id)
+    mensajes = PreguntaEvento.objects.filter(evento=evento).order_by('fecha_creacion')
+    
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Historial"
+    
+    # Encabezados
+    ws.append(['#', 'Tipo', 'Mensaje', 'Fecha'])
+    
+    for i, m in enumerate(mensajes, 1):
+        tipo = 'Pregunta' if m.tipo == 'expositor' else 'Respuesta'
+        ws.append([i, tipo, m.texto, m.fecha_creacion.strftime('%d/%m/%Y %H:%M')])
+    
+    # Estilo columnas
+    ws.column_dimensions['C'].width = 60
+    ws.column_dimensions['D'].width = 20
+    
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="historial_evento_{evento_id}.xlsx"'
+    wb.save(response)
+    return response
+
+# Eliminar hitorial despues de 30 dias del evento
+def limpiar_historial_eventos(request=None):
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    fecha_limite = timezone.now() - timedelta(days=30)
+    eventos_viejos = Evento.objects.filter(fin__lt=fecha_limite)
+    
+    total = 0
+    for evento in eventos_viejos:
+        cantidad = PreguntaEvento.objects.filter(evento=evento).count()
+        PreguntaEvento.objects.filter(evento=evento).delete()
+        total += cantidad
+    
+    print(f"🗑️ Eliminados {total} mensajes de eventos terminados hace más de 30 días")
+    return total
+
+def limpiar_historial_cron(request, token):
+    from django.conf import settings
+    if token != settings.SECRET_KEY[:20]:
+        return HttpResponse('No autorizado', status=403)
+    total = limpiar_historial_eventos()
+    return HttpResponse(f'OK - {total} mensajes eliminados')
+
+@login_required
+def panel_coordinador(request):
+    if not request.user.es_coordinador:
+        return redirect('home')
+    
+    eventos = Evento.objects.filter(
+        universidad=request.user.universidad_coordinador
+    ).order_by('-inicio')
+    
+    return render(request, 'eventos/panel_coordinador.html', {'eventos': eventos})
+
+@login_required
+def limpiar_chat_evento(request, evento_id):
+    if request.method == 'POST':
+        # Solo limpia la vista, NO elimina los registros de la BD
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=400)
