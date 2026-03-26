@@ -217,10 +217,17 @@ function habilitarSelects() {
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
     // Fetch Genérico
-    async function fetchData(action, id) {
+    async function fetchData(action, idValue) {
         const formData = new FormData();
         formData.append('action', action);
-        formData.append('id', id);
+        formData.append('id', idValue); // Corregido: antes decía 'id' a secas
+        
+        const urlParams = new URLSearchParams(window.location.search);
+            let universidad = urlParams.get('universidad');
+
+            if (universidad && universidad !== 'None') {
+                formData.append('universidad', universidad);
+            }
 
         const response = await fetch(window.location.href, {
             method: 'POST',
@@ -231,7 +238,13 @@ function habilitarSelects() {
             body: formData
         });
         
-        if (!response.ok) throw new Error('Error en la red');
+        // Agregamos las llaves { } al if para que no de SyntaxError
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Error del servidor:", errorText);
+            throw new Error('Error en la red');
+        }
+
         return response.json(); 
     }
 
@@ -297,7 +310,8 @@ function habilitarSelects() {
         selComuna.classList.remove('bg-white', 'dark:bg-[#0f172a]', 'text-slate-900', 'dark:text-white');
 
         try {
-            const data = await fetchData('buscar_comunas', idRegion);
+            const response = await fetch(`/administrador/api/comunas/?region=${encodeURIComponent(idRegion)}`);
+            const data = await response.json();
             let opts = '<option value="" disabled selected>Seleccione Comuna...</option>';
             if (data.length === 0) { opts = '<option value="" disabled>Sin comunas</option>'; }
             

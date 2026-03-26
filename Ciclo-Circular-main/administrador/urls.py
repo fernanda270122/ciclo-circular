@@ -26,7 +26,7 @@ from .views import (
     resetear_clave_coordinacion, procesamiento_cvs, procesamiento_ofrezco_necesito, cargar_excel_usuarios,
     # Funciones de eventos (Ahora sí están en views.py)
     gestionar_asistencia, reporte_confirmados, descargar_pdf_confirmados, enviar_recordatorio_pendientes, 
-    instituciones_coordinadores, eliminar_log_correo, eliminar_todos_logs
+    instituciones_coordinadores, eliminar_log_correo, eliminar_todos_logs, api_comunas
 )
 
 urlpatterns = [
@@ -202,4 +202,5 @@ path('preferencias/eliminar/<int:pref_id>/', views.admin_eliminar_preferencia, n
     path('administrador/membresias/', views.admin_membresias, name='admin_membresias'),
     path('mensajeria/', views.admin_mensajeria, name='admin_mensajeria'),
 
+    path('api/comunas/', views.api_comunas, name='api_comunas'),
 ]
