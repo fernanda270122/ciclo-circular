@@ -1,0 +1,124 @@
+{% extends 'base_public.html' %}
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 pt-6 pb-12">
+
+    <div class="flex items-center justify-between mb-8 pb-4 border-b border-slate-200 dark:border-slate-800">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center text-2xl">
+                <i class="fa-solid fa-store"></i>
+            </div>
+            <div>
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white">Tienda</h2>
+                <p class="text-sm text-slate-500">{% if universidad %}{{ universidad.nombre }}{% endif %}</p>
+            </div>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="mb-6 space-y-2">
+        {% for message in messages %}
+        <div class="p-4 rounded-xl text-sm font-bold flex items-center gap-3
+            {% if message.tags == 'error' %}bg-red-50 border border-red-200 text-red-700
+            {% else %}bg-emerald-50 border border-emerald-200 text-emerald-700{% endif %}">
+            <i class="fa-solid {% if message.tags == 'error' %}fa-triangle-exclamation{% else %}fa-check-circle{% endif %}"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if productos %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for producto in productos %}
+        <div class="bg-white dark:bg-[#1e293b] rounded-2xl shadow border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col">
+            {% if producto.imagen %}
+            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="w-full h-48 object-cover">
+            {% else %}
+            <div class="w-full h-48 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                <i class="fa-solid fa-shirt text-5xl text-slate-300"></i>
+            </div>
+            {% endif %}
+            <div class="p-5 flex flex-col flex-1">
+                <h3 class="font-bold text-slate-900 dark:text-white text-lg mb-1">{{ producto.nombre }}</h3>
+                <p class="text-sm text-slate-500 mb-4 flex-1">{{ producto.descripcion }}</p>
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-2xl font-black text-primary">${{ producto.precio }}</span>
+                    <span class="text-xs text-slate-400">Stock: {{ producto.stock }}</span>
+                </div>
+                <button onclick="abrirModal({{ producto.pk }}, '{{ producto.nombre }}', {{ producto.precio }})"
+                   class="w-full py-3 text-center bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-md flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-credit-card"></i> Comprar
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-20">
+        <i class="fa-solid fa-store text-5xl text-slate-200 mb-4"></i>
+        <p class="text-slate-400 font-medium">No hay productos disponibles en este momento.</p>
+    </div>
+    {% endif %}
+</div>
+<!-- Modal de Compra -->
+<div id="modalCompra" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 px-4">
+    <div class="bg-white dark:bg-[#1e293b] rounded-2xl shadow-2xl w-full max-w-md p-8 relative">
+        <button onclick="cerrarModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white transition">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+
+        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-1">Confirmar Compra</h3>
+        <p id="modalProductoNombre" class="text-sm text-slate-500 mb-6"></p>
+
+        <form id="formCompra" method="POST" action="">
+            {% csrf_token %}
+            <input type="hidden" name="metodo_entrega" value="retiro">
+
+            <div class="space-y-4 mb-6">
+                <!-- Datos del usuario -->
+                <div class="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                    <p class="text-xs font-bold text-slate-500 uppercase mb-2">Tus datos</p>
+                    <p class="text-sm font-medium text-slate-800 dark:text-white">{{ request.user.get_full_name }}</p>
+                    <p class="text-xs text-slate-500">{{ request.user.email }}</p>
+                    {% if request.user.region %}
+                    <p class="text-xs text-slate-500">{{ request.user.region }}{% if request.user.comuna %}, {{ request.user.comuna }}{% endif %}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Método de entrega -->
+                <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 flex items-center gap-3">
+                    <i class="fa-solid fa-building-columns text-blue-600 text-xl"></i>
+                    <div>
+                        <p class="text-sm font-bold text-blue-700 dark:text-blue-300">Retiro en Sede</p>
+                        <p class="text-xs text-blue-500">{% if universidad %}{{ universidad.nombre }}{% endif %}</p>
+                    </div>
+                </div>
+
+                <!-- Precio -->
+                <div class="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-700">
+                    <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Total a pagar</span>
+                    <span id="modalPrecio" class="text-2xl font-black text-blue-600"></span>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition shadow-md flex items-center justify-center gap-2">
+                <i class="fa-brands fa-cc-mastercard"></i> Ir a pagar con MercadoPago
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+function abrirModal(productoId, nombre, precio) {
+    document.getElementById('modalProductoNombre').textContent = nombre;
+    document.getElementById('modalPrecio').textContent = '$' + precio.toLocaleString('es-CL');
+    document.getElementById('formCompra').action = '/tienda/comprar/' + productoId + '/';
+    document.getElementById('modalCompra').classList.remove('hidden');
+}
+
+function cerrarModal() {
+    document.getElementById('modalCompra').classList.add('hidden');
+}
+</script>
+</script>
+{% endblock %}

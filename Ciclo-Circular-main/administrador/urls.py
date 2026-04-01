@@ -201,5 +201,10 @@ path('preferencias/eliminar/<int:pref_id>/', views.admin_eliminar_preferencia, n
     
     path('administrador/membresias/', views.admin_membresias, name='admin_membresias'),
     path('mensajeria/', views.admin_mensajeria, name='admin_mensajeria'),
+    
+    path('tienda/', views.gestion_tienda, name='gestion_tienda'),
+    path('tienda/crear/', views.crear_producto, name='crear_producto'),
+    path('tienda/eliminar/<int:producto_id>/', views.eliminar_producto, name='eliminar_producto'),
+    path('tienda/editar/<int:producto_id>/', views.editar_producto, name='editar_producto'),
 
 ]

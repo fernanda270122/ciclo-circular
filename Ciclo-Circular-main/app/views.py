@@ -3514,3 +3514,89 @@ def limpiar_chat_evento(request, evento_id):
         # Solo limpia la vista, NO elimina los registros de la BD
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error'}, status=400)
+
+# ==========================================
+# TIENDA
+# ==========================================
+
+@login_required
+def tienda(request):
+    from .models import Producto
+    universidad = None
+    if hasattr(request.user, 'universidad_coordinador') and request.user.universidad_coordinador:
+        universidad = request.user.universidad_coordinador
+    elif hasattr(request.user, 'universidad') and request.user.universidad:
+        universidad = request.user.universidad
+    elif hasattr(request.user, 'carrera') and request.user.carrera:
+        try:
+            universidad = request.user.carrera.departamento.facultad.universidad
+        except AttributeError:
+            pass
+
+    productos = Producto.objects.filter(
+        activo=True,
+        stock__gt=0,
+        universidad=universidad
+    ).order_by('-creado') if universidad else []
+
+    return render(request, 'tienda/tienda.html', {
+        'productos': productos,
+        'universidad': universidad
+    })
+
+
+@login_required
+def iniciar_pago_producto(request, producto_id):
+    import mercadopago
+    from .models import Producto, OrdenCompra
+    producto = get_object_or_404(Producto, pk=producto_id, activo=True)
+
+    if producto.stock <= 0:
+        messages.error(request, "Producto sin stock disponible.")
+        return redirect('tienda')
+
+    sdk = mercadopago.SDK(settings.MERCADOPAGO_ACCESS_TOKEN)
+
+    preference_data = {
+        "items": [{
+            "title": producto.nombre,
+            "quantity": 1,
+            "unit_price": float(producto.precio),
+        }],
+        "back_urls": {
+            "success": request.build_absolute_uri('/tienda/pago/exito/'),
+            "failure": request.build_absolute_uri('/tienda/pago/fallo/'),
+            "pending": request.build_absolute_uri('/tienda/pago/pendiente/'),
+        },
+        "auto_return": "approved",
+        "external_reference": f"{request.user.pk}-{producto.pk}",
+    }
+
+    preference_response = sdk.preference().create(preference_data)
+    init_point = preference_response.get("response", {}).get("init_point")
+
+    if not init_point:
+        messages.error(request, "No se pudo iniciar el pago. Intenta más tarde.")
+        return redirect('tienda')
+
+    OrdenCompra.objects.create(
+        usuario=request.user,
+        producto=producto,
+        cantidad=1,
+        total=producto.precio,
+        estado='pending'
+    )
+
+    return redirect(init_point)
+
+
+@login_required
+def pago_producto_exitoso(request):
+    messages.success(request, "¡Pago exitoso! Tu compra fue procesada.")
+    return redirect('tienda')
+
+
+@login_required
+def pago_producto_fallido(request):
+    messages.error(request, "El pago fue rechazado. Intenta nuevamente.")
+    return redirect('tienda')

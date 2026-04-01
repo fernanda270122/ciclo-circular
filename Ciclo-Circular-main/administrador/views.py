@@ -7696,3 +7696,99 @@ def eliminar_todos_logs(request):
     LogCorreo.objects.all().delete()
     messages.success(request, "Historial eliminado completamente.")
     return redirect('admin_mensajeria')
+
+@login_required
+def gestion_tienda(request):
+    if not request.user.is_staff and (not request.user.es_coordinador or not request.user.universidad_coordinador):
+        return redirect('home')
+
+    from app.models import Producto, OrdenCompra
+
+    if request.user.is_staff:
+        productos = Producto.objects.all().order_by('-creado')
+        ordenes = OrdenCompra.objects.all().order_by('-creado')[:10]
+        universidad = None
+    else:
+        productos = Producto.objects.filter(universidad=request.user.universidad_coordinador).order_by('-creado')
+        ordenes = OrdenCompra.objects.filter(producto__universidad=request.user.universidad_coordinador).order_by('-creado')[:10]
+        universidad = request.user.universidad_coordinador
+
+    return render(request, 'admin_usuarios/gestion_tienda.html', {
+        'productos': productos,
+        'ordenes': ordenes,
+        'universidad': universidad
+    })
+
+
+@login_required
+def crear_producto(request):
+    if not request.user.is_staff and (not request.user.es_coordinador or not request.user.universidad_coordinador):
+        return redirect('home')
+
+    from app.models import Producto, Universidad
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre')
+        descripcion = request.POST.get('descripcion')
+        precio = request.POST.get('precio')
+        stock = request.POST.get('stock')
+        imagen = request.FILES.get('imagen')
+
+        if nombre and precio and stock:
+            if request.user.is_staff:
+                uni_id = request.POST.get('universidad_id')
+                universidad_obj = Universidad.objects.filter(pk=uni_id).first()
+            else:
+                universidad_obj = request.user.universidad_coordinador
+
+            Producto.objects.create(
+                universidad=universidad_obj,
+                creado_por=request.user,
+                nombre=nombre,
+                descripcion=descripcion,
+                precio=int(precio),
+                stock=int(stock),
+                imagen=imagen,
+                activo=True
+            )
+            messages.success(request, "Producto creado exitosamente.")
+        else:
+            messages.error(request, "Completa todos los campos obligatorios.")
+
+        return redirect('gestion_tienda')
+
+    from app.models import Universidad
+    universidades = Universidad.objects.all()
+    return render(request, 'admin_usuarios/crear_producto.html', {'universidades': universidades})
+
+
+@login_required
+def eliminar_producto(request, producto_id):
+    from app.models import Producto
+    producto = get_object_or_404(Producto, pk=producto_id)
+
+    if request.user == producto.creado_por or request.user.is_staff:
+        producto.delete()
+        messages.success(request, "Producto eliminado.")
+
+    return redirect('gestion_tienda')
+
+
+@login_required
+def editar_producto(request, producto_id):
+    from app.models import Producto
+    producto = get_object_or_404(Producto, pk=producto_id)
+
+    if request.method == 'POST':
+        producto.nombre = request.POST.get('nombre', producto.nombre)
+        producto.descripcion = request.POST.get('descripcion', producto.descripcion)
+        producto.precio = int(request.POST.get('precio', producto.precio))
+        producto.stock = int(request.POST.get('stock', producto.stock))
+        producto.activo = request.POST.get('activo') == 'on'
+        if request.FILES.get('imagen'):
+            producto.imagen = request.FILES.get('imagen')
+        producto.save()
+        messages.success(request, "Producto actualizado.")
+        return redirect('gestion_tienda')
+
+    return render(request, 'admin_usuarios/editar_producto.html', {'producto': producto})

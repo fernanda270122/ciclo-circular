@@ -370,3 +370,33 @@ class LogCorreo(models.Model):
     def __str__(self):
         return f"{self.asunto} - {self.fecha_envio.strftime('%d/%m/%Y')}"
     
+class Producto(models.Model):
+    universidad = models.ForeignKey(Universidad, on_delete=models.CASCADE, related_name='productos')
+    creado_por = models.ForeignKey('user.Usuario', on_delete=models.CASCADE)
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField(blank=True, null=True)
+    precio = models.IntegerField(default=0)
+    stock = models.IntegerField(default=0)
+    imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
+    activo = models.BooleanField(default=True)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.nombre} - {self.universidad.nombre}"
+
+class OrdenCompra(models.Model):
+    ESTADOS = [
+        ('pending', 'Pendiente'),
+        ('approved', 'Aprobado'),
+        ('rejected', 'Rechazado'),
+    ]
+    usuario = models.ForeignKey('user.Usuario', on_delete=models.CASCADE)
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    cantidad = models.IntegerField(default=1)
+    total = models.IntegerField(default=0)
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='pending')
+    id_transaccion = models.CharField(max_length=255, blank=True, null=True)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.usuario.username} - {self.producto.nombre} - {self.estado}"

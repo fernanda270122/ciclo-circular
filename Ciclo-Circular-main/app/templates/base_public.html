@@ -232,6 +232,14 @@
                         <a href="{% url 'mis_oportunidades' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition group nav-item {% if request.resolver_match.url_name == 'mis_oportunidades' %}nav-active{% else %}text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5{% endif %}">
                             <i class="fa-solid fa-wand-magic-sparkles w-5 text-center group-hover:text-purple-600 dark:group-hover:text-purple-400 transition"></i> <span class="font-medium">Mis Oportunidades Laborales</span>
                         </a>
+                        <div class="pt-4 pb-1 px-4">
+                            <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Tienda</p>
+                        </div>
+
+                        <a href="{% url 'tienda' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition group nav-item {% if request.resolver_match.url_name == 'tienda' %}nav-active{% else %}text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5{% endif %}">
+                            <i class="fa-solid fa-store w-5 text-center group-hover:text-blue-500 transition"></i> 
+                            <span class="font-medium">Tienda</span>
+                        </a>
 
                         <form method="post" action="{% url 'logout' %}">
                             {% csrf_token %}
