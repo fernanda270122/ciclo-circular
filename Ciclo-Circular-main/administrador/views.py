@@ -5163,9 +5163,14 @@ def editar_usuario(request, user_id):
 
     # Determinar ID Universidad
     uni_id = None
-    if usuario.carrera:
-        uni_id = usuario.carrera.departamento.facultad.universidad.pk
-    else:
+    try:
+        if usuario.universidad:
+            uni_id = usuario.universidad.pk
+        elif usuario.carrera:
+            uni_id = usuario.carrera.departamento.facultad.universidad.pk
+        else:
+            uni_id = request.GET.get("universidad")
+    except Exception:
         uni_id = request.GET.get("universidad")
 
     # Cargar carreras disponibles
