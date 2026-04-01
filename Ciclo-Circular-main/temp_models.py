@@ -369,7 +369,12 @@ class LogCorreo(models.Model):
 
     def __str__(self):
         return f"{self.asunto} - {self.fecha_envio.strftime('%d/%m/%Y')}"
+<<<<<<< HEAD
 
+# SECCION DE VENTAS
+=======
+    
+>>>>>>> desarrollo
 class Producto(models.Model):
     universidad = models.ForeignKey(Universidad, on_delete=models.CASCADE, related_name='productos')
     creado_por = models.ForeignKey('user.Usuario', on_delete=models.CASCADE)

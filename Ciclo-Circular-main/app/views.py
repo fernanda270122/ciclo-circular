@@ -3522,10 +3522,7 @@ def limpiar_chat_evento(request, evento_id):
 @login_required
 def tienda(request):
     from .models import Producto
-<<<<<<< HEAD
-    # Obtener universidad del usuario
-=======
->>>>>>> desarrollo
+
     universidad = None
     if hasattr(request.user, 'universidad_coordinador') and request.user.universidad_coordinador:
         universidad = request.user.universidad_coordinador
@@ -3552,10 +3549,9 @@ def tienda(request):
 @login_required
 def iniciar_pago_producto(request, producto_id):
     import mercadopago
-<<<<<<< HEAD
-=======
+
     from .models import Producto, OrdenCompra
->>>>>>> desarrollo
+
     producto = get_object_or_404(Producto, pk=producto_id, activo=True)
 
     if producto.stock <= 0:
@@ -3586,10 +3582,6 @@ def iniciar_pago_producto(request, producto_id):
         messages.error(request, "No se pudo iniciar el pago. Intenta más tarde.")
         return redirect('tienda')
 
-<<<<<<< HEAD
-    # Crear orden pendiente
-=======
->>>>>>> desarrollo
     OrdenCompra.objects.create(
         usuario=request.user,
         producto=producto,

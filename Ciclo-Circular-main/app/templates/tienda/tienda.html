@@ -45,17 +45,16 @@
                     <span class="text-2xl font-black text-primary">${{ producto.precio }}</span>
                     <span class="text-xs text-slate-400">Stock: {{ producto.stock }}</span>
                 </div>
-<<<<<<< HEAD
+
                 <a href="{% url 'iniciar_pago_producto' producto.pk %}"
                    class="w-full py-3 text-center bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-md flex items-center justify-center gap-2">
                     <i class="fa-solid fa-credit-card"></i> Comprar
                 </a>
-=======
+
                 <button onclick="abrirModal({{ producto.pk }}, '{{ producto.nombre }}', {{ producto.precio }})"
                    class="w-full py-3 text-center bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-md flex items-center justify-center gap-2">
                     <i class="fa-solid fa-credit-card"></i> Comprar
                 </button>
->>>>>>> desarrollo
             </div>
         </div>
         {% endfor %}
@@ -67,8 +66,7 @@
     </div>
     {% endif %}
 </div>
-<<<<<<< HEAD
-=======
+
 <!-- Modal de Compra -->
 <div id="modalCompra" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 px-4">
     <div class="bg-white dark:bg-[#1e293b] rounded-2xl shadow-2xl w-full max-w-md p-8 relative">
@@ -130,5 +128,4 @@ function cerrarModal() {
 }
 </script>
 </script>
->>>>>>> desarrollo
 {% endblock %}

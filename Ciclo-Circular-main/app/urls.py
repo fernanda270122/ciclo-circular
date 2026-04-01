@@ -196,17 +196,11 @@ urlpatterns = [
     
     path('evento/<int:evento_id>/limpiar-chat/', views.limpiar_chat_evento, name='limpiar_chat_evento'),
     
-<<<<<<< HEAD
+
     #TIENDA
-=======
->>>>>>> desarrollo
     path('tienda/', views.tienda, name='tienda'),
     path('tienda/comprar/<int:producto_id>/', views.iniciar_pago_producto, name='iniciar_pago_producto'),
     path('tienda/pago/exito/', views.pago_producto_exitoso, name='pago_producto_exitoso'),
     path('tienda/pago/fallo/', views.pago_producto_fallido, name='pago_producto_fallido'),
-<<<<<<< HEAD
-    
-    
-=======
->>>>>>> desarrollo
+
     ]
