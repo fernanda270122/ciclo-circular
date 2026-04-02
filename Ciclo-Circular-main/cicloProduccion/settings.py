@@ -163,10 +163,12 @@ if EN_RENDER or EN_PYTHONANYWHERE:
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     CSRF_COOKIE_SAMESITE = 'Lax'
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 else:
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.pythonanywhere.com',
@@ -189,7 +191,6 @@ IMPORT_EXPORT_USE_TRANSACTIONS = True
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # --- CONFIGURACIÓN DE EMAIL (BREVO API) ---
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp-relay.brevo.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
