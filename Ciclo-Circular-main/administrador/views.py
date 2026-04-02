@@ -7776,7 +7776,10 @@ def crear_producto(request):
         stock = request.POST.get('stock')
         imagen = None
         if request.FILES.get('imagen'):
-            upload_result = cloudinary.uploader.upload(request.FILES.get('imagen'))
+            upload_result = cloudinary.uploader.upload(
+                request.FILES.get('imagen'),
+                transformation=[{"width": 800, "crop": "limit", "quality": "auto"}]
+            )
             imagen = upload_result.get('secure_url')
 
         if nombre and precio and stock:
