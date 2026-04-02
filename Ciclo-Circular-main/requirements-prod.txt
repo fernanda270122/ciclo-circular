@@ -35,3 +35,5 @@ scipy
 scikit-learn
 python-bidi==0.4.2
 wordcloud
+cloudinary==1.44.1
+django-cloudinary-storage==0.3.0
