@@ -5081,12 +5081,21 @@ def crear_usuario(request):
 
             # Enviar Correo (Tu lógica original intacta)
             try:
-                asunto = "Bienvenido a Alumni"
-                mensaje = f"Hola {nombre},\nTu cuenta ha sido creada.\nUsuario: {username}\nClave: {clave_temporal}\n"
+                asunto = "Bienvenido a Alumni - Activa tu cuenta"
+                uid = urlsafe_base64_encode(force_bytes(nuevo_usuario.pk))
+                token = default_token_generator.make_token(nuevo_usuario)
+                domain = request.get_host()
+                scheme = request.scheme
+                reset_url = reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+                full_url = f"{scheme}://{domain}{reset_url}"
+                print(f"🔗 Link generado: {full_url}")
+                mensaje = f"Hola {nombre},\n\nTu cuenta ha sido creada en la plataforma Alumni.\n\nUsuario: {username}\n\nPara activar tu cuenta y crear tu contraseña, haz clic aquí:\n{full_url}\n\nEste enlace expirará en 24 horas.\n\nBienvenido/a,\nEquipo Alumni"
                 send_mail(asunto, mensaje, settings.EMAIL_HOST_USER, [email], fail_silently=False)
-                messages.success(request, f"Usuario creado exitosamente.")
-            except Exception:
-                messages.warning(request, f"Usuario creado, pero falló el correo. Clave: {clave_temporal}")
+                print("✅ Correo enviado")
+                messages.success(request, "Usuario creado exitosamente. Se envió el correo de activación.")
+            except Exception as e:
+                print(f"ERROR CORREO: {e}")
+                messages.warning(request, f"Usuario creado, pero falló el correo: {e}")
 
             return redirect(f"/administrador/usuarios?universidad={uni_id}")
 
@@ -6097,18 +6106,23 @@ def crear_usuario_coordinacion(request):
             )
 
             # Enviar Correo
-            asunto = "Bienvenido a la Plataforma"
-            mensaje = f"Hola {nombre}, tu cuenta ha sido creada.\nUniversidad: {universidad_obj.nombre}\nUsuario: {username}\nClave temporal: {clave_temporal}\n\nPor favor cámbiala al ingresar."
+            uid = urlsafe_base64_encode(force_bytes(nuevo_usuario.pk))
+            token = default_token_generator.make_token(nuevo_usuario)
+            domain = request.get_host()
+            scheme = request.scheme
+            reset_url = reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+            full_url = f"{scheme}://{domain}{reset_url}"
+            asunto = "Bienvenido a Alumni - Activa tu cuenta"
+            mensaje = f"Hola {nombre},\n\nTu cuenta ha sido creada en {universidad_obj.nombre}.\n\nUsuario: {username}\n\nPara activar tu cuenta y crear tu contraseña, haz clic aquí:\n{full_url}\n\nEste enlace expirará en 24 horas.\n\nBienvenido/a,\nEquipo Alumni"
             
             EmailThread(asunto, mensaje, [email]).start()
             
-            messages.success(request, f"Alumno creado exitosamente. Clave enviada a {email}.")
+            messages.success(request, f"Alumno creado exitosamente. Correo de activación enviado a {email}.")
             return redirect("coordina_usuarios")
 
         except Exception as e:
             print(f"🔴 ERROR: {e}")
             messages.error(request, f"Error interno: {str(e)}")
-
     # ---------------------------------------------------------
     # 4. BLOQUE GET (Carga Inicial)
     # ---------------------------------------------------------
@@ -6648,8 +6662,14 @@ def cargar_excel_usuarios(request):
                     RegistroActividad.objects.create(usuario=user, carrera=area)
 
                     # Enviar correo en SEGUNDO PLANO (Usando tu clase EmailThread)
-                    asunto = "Bienvenido a la plataforma Alumni"
-                    mensaje = f"Hola {first},\n\nTu cuenta ha sido creada exitosamente en {Universidad_seleccionada.nombre}.\n\nUsuario: {username}\nClave: {clave}\n\nIngresa aquí: https://alumni-produccion.onrender.com"
+                    uid = urlsafe_base64_encode(force_bytes(user.pk))
+                    token = default_token_generator.make_token(user)
+                    domain = request.get_host()
+                    scheme = request.scheme
+                    reset_url = reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+                    full_url = f"{scheme}://{domain}{reset_url}"
+                    asunto = "Bienvenido a Alumni - Activa tu cuenta"
+                    mensaje = f"Hola {first},\n\nTu cuenta ha sido creada exitosamente en {Universidad_seleccionada.nombre}.\n\nUsuario: {username}\n\nPara activar tu cuenta y crear tu contraseña, haz clic aquí:\n{full_url}\n\nEste enlace expirará en 24 horas.\n\nBienvenido/a,\nEquipo Alumni"
                     
                     EmailThread(asunto, mensaje, [email]).start()
 
