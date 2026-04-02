@@ -258,6 +258,9 @@ GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 GOOGLE_API_KEY = os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY')
 
+# Compatibilidad con django-cloudinary-storage
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
 # --- CLOUDINARY ---
 import cloudinary
 import cloudinary.uploader
