@@ -96,8 +96,9 @@ class EmailThread(threading.Thread):
             print(f"Error enviando correo en hilo: {e}")
             
 # Create your views here.
-@login_required
 def home(request):
+    if not request.user.is_authenticated:
+        return render(request, 'landing.html')
     # LÓGICA PARA ADMINISTRADORES (Dashboard)
     if request.user.is_staff:
         

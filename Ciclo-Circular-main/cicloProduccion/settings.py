@@ -53,12 +53,14 @@ elif EN_PYTHONANYWHERE:
     )
 
 else:
-    # --- MODO LOCAL (TU PC) ---
-    DATABASES['default'] = dj_database_url.config(
-        default='postgresql://ciclo_circular_db_user:Thj4j2hENjSvAD7QSY22igjyzSIwRmkv@dpg-d6o2fbk50q8c73dc9veg-a.oregon-postgres.render.com/ciclo_circular_db',
-        conn_max_age=600
-    )
-
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'ciclo_circular_local',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
 
 # --- 3. APLICACIONES Y MIDDLEWARE ---
 INSTALLED_APPS = [
@@ -156,6 +158,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # --- 7. SEGURIDAD Y HTTPS ---
+# --- 7. SEGURIDAD Y HTTPS ---
 if EN_RENDER or EN_PYTHONANYWHERE:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
@@ -169,11 +172,6 @@ else:
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-CSRF_TRUSTED_ORIGINS = [
-    'https://*.pythonanywhere.com',
-    'https://*.onrender.com'
-]
 
 # --- 8. CORREO Y API KEYS ---
 REST_FRAMEWORK = {
