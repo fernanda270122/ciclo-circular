@@ -42,7 +42,7 @@ from openpyxl import Workbook, load_workbook
 from Levenshtein import distance, editops, apply_edit, jaro
 from openai import OpenAI
 from dotenv import load_dotenv
-#from xhtml2pdf import pisa # <--- Necesario para el PDF
+from xhtml2pdf import pisa # <--- Necesario para el PDF
 
 try:
     from xhtml2pdf import pisa
@@ -7948,6 +7948,8 @@ def ver_resultados_encuesta(request, encuesta_id):
 @login_required
 def descargar_resultados_encuesta(request, encuesta_id):
     import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
     from django.http import HttpResponse
 
     encuesta = get_object_or_404(Encuesta, pk=encuesta_id)
@@ -7955,16 +7957,52 @@ def descargar_resultados_encuesta(request, encuesta_id):
     ws = wb.active
     ws.title = "Resultados"
 
+    # Estilos
+    header_font = Font(name='Arial', bold=True, color='FFFFFF', size=11)
+    header_fill = PatternFill('solid', start_color='1e3a5f')
+    header_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    data_font = Font(name='Arial', size=10)
+    data_align = Alignment(vertical='center', wrap_text=True)
+
+    # Fila de título
+    preguntas = list(encuesta.preguntas.all().order_by('orden'))
+    total_cols = 2 + len(preguntas)
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=total_cols)
+    titulo_cell = ws.cell(row=1, column=1, value=f"Resultados: {encuesta.titulo}")
+    titulo_cell.font = Font(name='Arial', bold=True, color='FFFFFF', size=13)
+    titulo_cell.fill = PatternFill('solid', start_color='991b1b')
+    titulo_cell.alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[1].height = 30
+
+    # Fila de info
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=total_cols)
+    info_cell = ws.cell(row=2, column=1, value=f"Sede: {encuesta.universidad.nombre} | Vence: {encuesta.fecha_vencimiento} | Total respuestas: {RespuestaEncuesta.objects.filter(encuesta=encuesta).count()}")
+    info_cell.font = Font(name='Arial', italic=True, size=9, color='555555')
+    info_cell.alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[2].height = 18
+
     # Encabezados
-    ws.append(["Usuario", "Email"] + [p.texto for p in encuesta.preguntas.all().order_by('orden')])
+    headers = ['Usuario', 'Email'] + [p.texto for p in preguntas]
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=3, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_align
+        cell.border = border
+    ws.row_dimensions[3].height = 40
 
     # Datos
-    for respuesta in RespuestaEncuesta.objects.filter(encuesta=encuesta).select_related('usuario'):
+    for row_idx, respuesta in enumerate(RespuestaEncuesta.objects.filter(encuesta=encuesta).select_related('usuario'), 4):
+        fill = PatternFill('solid', start_color='EFF3FB') if row_idx % 2 == 0 else PatternFill('solid', start_color='FFFFFF')
         fila = [respuesta.usuario.username, respuesta.usuario.email]
-        for pregunta in encuesta.preguntas.all().order_by('orden'):
-            detalle = DetalleRespuesta.objects.filter(
-                respuesta=respuesta, pregunta=pregunta
-            ).first()
+        for pregunta in preguntas:
+            detalle = DetalleRespuesta.objects.filter(respuesta=respuesta, pregunta=pregunta).first()
             if detalle:
                 if pregunta.tipo == 'opcion_multiple' and detalle.opcion_seleccionada:
                     fila.append(detalle.opcion_seleccionada.texto)
@@ -7972,7 +8010,22 @@ def descargar_resultados_encuesta(request, encuesta_id):
                     fila.append(detalle.texto_respuesta or '')
             else:
                 fila.append('')
-        ws.append(fila)
+        for col, valor in enumerate(fila, 1):
+            cell = ws.cell(row=row_idx, column=col, value=valor)
+            cell.font = data_font
+            cell.alignment = data_align
+            cell.fill = fill
+            cell.border = border
+        ws.row_dimensions[row_idx].height = 20
+
+    # Anchos de columna
+    ws.column_dimensions['A'].width = 20
+    ws.column_dimensions['B'].width = 30
+    for col in range(3, total_cols + 1):
+        ws.column_dimensions[get_column_letter(col)].width = 35
+
+    # Freeze headers
+    ws.freeze_panes = 'A4'
 
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
