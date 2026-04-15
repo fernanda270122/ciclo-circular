@@ -42,7 +42,10 @@ from openpyxl import Workbook, load_workbook
 from Levenshtein import distance, editops, apply_edit, jaro
 from openai import OpenAI
 from dotenv import load_dotenv
-from xhtml2pdf import pisa # <--- Necesario para el PDF
+try:
+    from xhtml2pdf import pisa
+except ImportError:
+    pisa = None# <--- Necesario para el PDF
 
 try:
     from xhtml2pdf import pisa
@@ -6552,9 +6555,9 @@ def cargar_excel_usuarios(request):
         else:
             # ADMIN: Puede elegir universidad
             Universidads = Universidad.objects.all()
-            # Obtener ID por GET (al entrar) o mantenerlo si ya estaba seleccionado
-            uni_id = request.GET.get("universidad") or request.GET.get("Universidad")
-            
+            # Obtener ID por GET o POST
+            uni_id = request.POST.get("universidad") or request.GET.get("universidad") or request.GET.get("Universidad")
+            print(f"DEBUG uni_id: {uni_id}, método: {request.method}, POST: {request.POST}")
             if uni_id:
                 try:
                     Universidad_seleccionada = Universidad.objects.get(pk=uni_id)
