@@ -47,11 +47,6 @@ try:
 except ImportError:
     pisa = None# <--- Necesario para el PDF
 
-try:
-    from xhtml2pdf import pisa
-except ImportError:
-    pisa = None
-    
 # --- Django Core ---
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse, Http404
