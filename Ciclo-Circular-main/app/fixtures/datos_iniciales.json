@@ -1,0 +1,252 @@
+VERSIÓN INSTALADA DE GEMINI: 0.8.5
+[
+{
+  "model": "app.universidad",
+  "pk": 7,
+  "fields": {
+    "nombre": "Duoc UC",
+    "calle": "",
+    "comuna": "",
+    "lat": -33,
+    "long": -70
+  }
+},
+{
+  "model": "app.universidad",
+  "pk": 8,
+  "fields": {
+    "nombre": "Universidad de Chile",
+    "calle": "",
+    "comuna": "",
+    "lat": -33,
+    "long": -70
+  }
+},
+{
+  "model": "app.universidad",
+  "pk": 9,
+  "fields": {
+    "nombre": "INACAP Sede Maipú",
+    "calle": "",
+    "comuna": "",
+    "lat": -33,
+    "long": -70
+  }
+},
+{
+  "model": "app.facultad",
+  "pk": 1,
+  "fields": {
+    "nombre": "Facultad Informatica",
+    "universidad": 7
+  }
+},
+{
+  "model": "app.facultad",
+  "pk": 2,
+  "fields": {
+    "nombre": "Facultad INACAP",
+    "universidad": 9
+  }
+},
+{
+  "model": "app.facultad",
+  "pk": 3,
+  "fields": {
+    "nombre": "Facultad Ingenieria",
+    "universidad": 8
+  }
+},
+{
+  "model": "app.departamento",
+  "pk": 1,
+  "fields": {
+    "nombre": "Departamento Informatica",
+    "facultad": 1
+  }
+},
+{
+  "model": "app.departamento",
+  "pk": 2,
+  "fields": {
+    "nombre": "Departamento INACAP",
+    "facultad": 2
+  }
+},
+{
+  "model": "app.departamento",
+  "pk": 3,
+  "fields": {
+    "nombre": "Departamento Ingenieria",
+    "facultad": 3
+  }
+},
+{
+  "model": "app.carrera",
+  "pk": 1,
+  "fields": {
+    "nombre": "Analista Programador",
+    "departamento": 1,
+    "calle": null,
+    "comuna": null,
+    "lat": 0,
+    "long": 0
+  }
+},
+{
+  "model": "app.carrera",
+  "pk": 2,
+  "fields": {
+    "nombre": "Ingenieria en Informatica",
+    "departamento": 1,
+    "calle": null,
+    "comuna": null,
+    "lat": 0,
+    "long": 0
+  }
+},
+{
+  "model": "app.carrera",
+  "pk": 3,
+  "fields": {
+    "nombre": "Analista Programador",
+    "departamento": 2,
+    "calle": null,
+    "comuna": null,
+    "lat": 0,
+    "long": 0
+  }
+},
+{
+  "model": "app.carrera",
+  "pk": 4,
+  "fields": {
+    "nombre": "Ingenieria en Informatica",
+    "departamento": 2,
+    "calle": null,
+    "comuna": null,
+    "lat": 0,
+    "long": 0
+  }
+},
+{
+  "model": "app.carrera",
+  "pk": 5,
+  "fields": {
+    "nombre": "Gastronomia",
+    "departamento": 2,
+    "calle": null,
+    "comuna": null,
+    "lat": 0,
+    "long": 0
+  }
+},
+{
+  "model": "app.carrera",
+  "pk": 6,
+  "fields": {
+    "nombre": "Hoteleria y Turismo",
+    "departamento": 2,
+    "calle": null,
+    "comuna": null,
+    "lat": 0,
+    "long": 0
+  }
+},
+{
+  "model": "app.carrera",
+  "pk": 7,
+  "fields": {
+    "nombre": "Ingenieria Industrial",
+    "departamento": 3,
+    "calle": null,
+    "comuna": null,
+    "lat": 0,
+    "long": 0
+  }
+},
+{
+  "model": "app.carrera",
+  "pk": 8,
+  "fields": {
+    "nombre": "Ingenieria Civil",
+    "departamento": 3,
+    "calle": null,
+    "comuna": null,
+    "lat": 0,
+    "long": 0
+  }
+},
+{
+  "model": "app.carrera",
+  "pk": 9,
+  "fields": {
+    "nombre": "Ingenieria en Informatica",
+    "departamento": 3,
+    "calle": null,
+    "comuna": null,
+    "lat": 0,
+    "long": 0
+  }
+},
+{
+  "model": "app.carrera",
+  "pk": 10,
+  "fields": {
+    "nombre": "Gastronomia Internacional",
+    "departamento": 2,
+    "calle": null,
+    "comuna": null,
+    "lat": 0,
+    "long": 0
+  }
+},
+{
+  "model": "app.carrera",
+  "pk": 11,
+  "fields": {
+    "nombre": "Turismo",
+    "departamento": 2,
+    "calle": null,
+    "comuna": null,
+    "lat": 0,
+    "long": 0
+  }
+},
+{
+  "model": "app.carrera",
+  "pk": 12,
+  "fields": {
+    "nombre": "Hotelería y Servicios",
+    "departamento": 2,
+    "calle": null,
+    "comuna": null,
+    "lat": 0,
+    "long": 0
+  }
+},
+{
+  "model": "app.carrera",
+  "pk": 13,
+  "fields": {
+    "nombre": "Programación y Animación de Videojuegos",
+    "departamento": 2,
+    "calle": null,
+    "comuna": null,
+    "lat": 0,
+    "long": 0
+  }
+},
+{
+  "model": "app.carrera",
+  "pk": 14,
+  "fields": {
+    "nombre": "Telecomunicación y Servicios Digitales",
+    "departamento": 2,
+    "calle": null,
+    "comuna": null,
+    "lat": 0,
+    "long": 0
+  }
+}
+]
