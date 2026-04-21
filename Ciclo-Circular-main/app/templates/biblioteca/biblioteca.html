@@ -1,0 +1,145 @@
+ {% extends 'base_public.html' %}
+                                                                                                                          {% block content %}
+  <div class="bg-white dark:bg-[#1e293b] rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700
+  overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-white/5 flex items-center justify-between">
+          <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+              <i class="fa-solid fa-book text-primary"></i> Biblioteca de Documentos
+          </h2>
+          {% if user.is_staff or user.es_coordinador %}
+          <button onclick="document.getElementById('modal-crear').classList.remove('hidden')"
+                  class="flex items-center gap-2 px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primaryHover transition">
+              <i class="fa-solid fa-plus"></i> Agregar Documento
+          </button>
+          {% endif %}
+      </div>
+
+      <div class="p-6">
+          {% if documentos %}
+          <div class="overflow-x-auto">
+              <table class="w-full text-sm text-left">
+                  <thead>
+                      <tr class="border-b border-gray-200 dark:border-gray-700 text-xs uppercase text-slate-400 dark:text-slate-500">
+                          <th class="pb-3 pr-4">N° Documento</th>
+                          <th class="pb-3 pr-4">Título</th>
+                          <th class="pb-3 pr-4">Descripción</th>
+                          <th class="pb-3 pr-4">Fecha</th>
+                          <th class="pb-3">Acciones</th>
+                      </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                      {% for doc in documentos %}
+                      <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition">
+                          <td class="py-3 pr-4 font-mono text-xs text-slate-500 dark:text-slate-400">{{ doc.numero_documento }}</td>
+                          <td class="py-3 pr-4 font-medium text-slate-800 dark:text-white">{{ doc.titulo }}</td>
+                          <td class="py-3 pr-4 text-slate-600 dark:text-slate-300 max-w-xs">{{ doc.descripcion }}</td>
+                          <td class="py-3 pr-4 text-slate-500 dark:text-slate-400">{{ doc.fecha|date:"d/m/Y" }}</td>
+                          <td class="py-3 flex items-center gap-2">
+                              {% if doc.archivo %}
+                              <a href="{{ doc.archivo.url }}" target="_blank"
+                                 class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primaryHover transition">
+                                  <i class="fa-solid fa-download"></i> Descargar
+                              </a>
+                              {% endif %}
+                              {% if user.is_staff or user.es_coordinador %}
+                              <button onclick="abrirEditar('{{ doc.pk }}', '{{ doc.titulo }}', '{{ doc.descripcion }}')"
+                                      class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-100 text-amber-700 text-xs font-medium hover:bg-amber-200 transition">
+                                  <i class="fa-solid fa-pen"></i> Editar
+                              </button>
+                              <form method="POST" action="{% url 'biblioteca_eliminar' doc.pk %}" onsubmit="return confirm('¿Eliminar este documento?')">
+                                  {% csrf_token %}
+                                  <button type="submit"
+                                          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-100 text-red-600 text-xs font-medium hover:bg-red-200 transition">
+                                      <i class="fa-solid fa-trash"></i> Eliminar
+                                  </button>
+                              </form>
+                              {% endif %}
+                          </td>
+                      </tr>
+                      {% endfor %}
+                  </tbody>
+              </table>
+          </div>
+          {% else %}
+          <p class="text-slate-400 dark:text-slate-500 text-sm text-center py-8">No hay documentos disponibles.</p>
+          {% endif %}
+      </div>
+  </div>
+
+  {% if user.is_staff or user.es_coordinador %}
+  <!-- Modal Crear -->
+  <div id="modal-crear" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+      <div class="bg-white dark:bg-[#1e293b] rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6">
+          <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-4">Agregar Documento</h3>
+          <form method="POST" action="{% url 'biblioteca_crear' %}" enctype="multipart/form-data" class="space-y-4">
+              {% csrf_token %}
+              <div>
+                 {% if user.is_staff %}
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase">Universidad *</label>
+                        <select name="universidad_id" required class="mt-1 w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-darkBg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary outline-none">
+                            <option value="">Seleccione una universidad</option>
+                            <option value="todas">Todas las universidades</option>
+                            {% for uni in universidades %}
+                            <option value="{{ uni.id_universidad }}">{{ uni.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+                  <label class="text-xs font-bold text-slate-500 uppercase">Título *</label>
+                  <input type="text" name="titulo" required class="mt-1 w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-darkBg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary outline-none">
+              </div>
+              <div>
+                  <label class="text-xs font-bold text-slate-500 uppercase">Descripción *</label>
+                  <textarea name="descripcion" required rows="3" class="mt-1 w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-darkBg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary outline-none"></textarea>
+              </div>
+              <div>
+                  <label class="text-xs font-bold text-slate-500 uppercase">Archivo PDF *</label>
+                  <input type="file" name="archivo" accept=".pdf" required class="mt-1 block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer">
+              </div>
+              <div class="flex gap-3 pt-2">
+                  <button type="submit" class="flex-1 py-2 bg-primary text-white font-bold text-xs rounded-lg hover:bg-primaryHover transition">Guardar</button>
+                  <button type="button" onclick="document.getElementById('modal-crear').classList.add('hidden')"
+                          class="flex-1 py-2 border border-gray-300 dark:border-gray-600 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 transition">Cancelar</button>
+              </div>
+          </form>
+      </div>
+  </div>
+
+  <!-- Modal Editar -->
+  <div id="modal-editar" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+      <div class="bg-white dark:bg-[#1e293b] rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6">
+          <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-4">Editar Documento</h3>
+          <form method="POST" id="form-editar" enctype="multipart/form-data" class="space-y-4">
+              {% csrf_token %}
+              <div>
+                  <label class="text-xs font-bold text-slate-500 uppercase">Título *</label>
+                  <input type="text" name="titulo" id="editar-titulo" required class="mt-1 w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-darkBg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary outline-none">
+              </div>
+              <div>
+                  <label class="text-xs font-bold text-slate-500 uppercase">Descripción *</label>
+                  <textarea name="descripcion" id="editar-descripcion" required rows="3" class="mt-1 w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-darkBg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary outline-none"></textarea>
+              </div>
+              <div>
+                  <label class="text-xs font-bold text-slate-500 uppercase">Reemplazar PDF (opcional)</label>
+                  <input type="file" name="archivo" accept=".pdf" class="mt-1 block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer">
+              </div>
+              <div class="flex gap-3 pt-2">
+                  <button type="submit" class="flex-1 py-2 bg-primary text-white font-bold text-xs rounded-lg hover:bg-primaryHover transition">Guardar</button>
+                  <button type="button" onclick="document.getElementById('modal-editar').classList.add('hidden')"
+                          class="flex-1 py-2 border border-gray-300 dark:border-gray-600 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 transition">Cancelar</button>
+              </div>
+          </form>
+      </div>
+  </div>
+
+  <script>
+  function abrirEditar(pk, titulo, descripcion) {
+      document.getElementById('editar-titulo').value = titulo;
+      document.getElementById('editar-descripcion').value = descripcion;
+      document.getElementById('form-editar').action = '/biblioteca/editar/' + pk + '/';
+      document.getElementById('modal-editar').classList.remove('hidden');
+  }
+  </script>
+  {% endif %}
+  {% endblock %}

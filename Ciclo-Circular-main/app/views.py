@@ -20,6 +20,7 @@ from time import process_time_ns
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
+
 import traceback
 # Evitamos que las advertencias llenen los logs de Render
 warnings.filterwarnings("ignore")
@@ -53,7 +54,7 @@ from .models import (
     Universidad, Facultad, Departamento, Carrera, 
     Etapa, RegistroActividad, Entrada, Salida, Oportunidades, Idea, 
     CVUsuario, Oferta, Necesidad, 
-    Evento, Invitacion, PreguntaEvento, TransaccionPago,  
+    Evento, Invitacion, PreguntaEvento, TransaccionPago, DocumentoBiblioteca
 )
 from .forms import EntradaForm, SalidaForm, OportunidadForm
 
@@ -1225,7 +1226,7 @@ def mi_perfil(request):
     except Exception as e:
         print(f"ERROR CRÍTICO EN MI PERFIL: {e}") # Mira la consola para ver el error real
         messages.error(request, "Ocurrió un error al cargar tu perfil. Intenta nuevamente.")
-        return render(request, 'mi_perfil.html', contexto)
+        return render(request, 'mi_perfil/mi_perfil.html', {}) 
 
 #---- Match en coincidencia de palabras clave de una oferta con el cv ----
 @login_required
@@ -3688,3 +3689,81 @@ def mis_encuestas(request):
     return render(request, 'encuestas/mis_encuestas.html', {
         'encuestas': encuestas
     })
+
+from app.models import Universidad
+@login_required                                                                                                         
+def biblioteca(request):
+    universidad = request.user.universidad or request.user.universidad_coordinador
+    documentos = DocumentoBiblioteca.objects.filter(universidad=universidad).order_by('-fecha')
+    universidades = Universidad.objects.all()
+    return render(request, 'biblioteca/biblioteca.html', {'documentos': documentos, 'universidades': universidades})
+
+@login_required
+def biblioteca_crear(request):                                                                                              
+    if not (request.user.is_staff or request.user.es_coordinador):
+        return redirect('biblioteca')
+    if request.method == 'POST':
+        titulo = request.POST.get('titulo')
+        descripcion = request.POST.get('descripcion')
+        archivo = request.FILES.get('archivo')
+        universidad_id = request.POST.get('universidad_id')
+        universidad = request.user.universidad or request.user.universidad_coordinador
+        if request.user.is_staff and universidad_id:
+            if universidad_id == 'todas':
+                universidad = None
+            else:
+                universidad = Universidad.objects.filter(pk=universidad_id).first()
+        if titulo and descripcion and archivo:   
+            if request.user.is_staff and universidad_id == 'todas':
+                for uni in Universidad.objects.all():                                                                                                                                                             DocumentoBiblioteca.objects.create(
+                        titulo=titulo,
+                        descripcion=descripcion,
+                        archivo=archivo,
+                        universidad=uni,
+                        subido_por=request.user
+                    )
+            elif universidad:
+                DocumentoBiblioteca.objects.create(
+                    titulo=titulo,
+                    descripcion=descripcion,
+                    archivo=archivo,
+                    universidad=universidad,
+                    subido_por=request.user
+                )
+        return redirect('biblioteca')
+    return redirect('biblioteca')
+
+@login_required
+def biblioteca(request):
+    if request.user.is_staff:
+        documentos = DocumentoBiblioteca.objects.all().order_by('-fecha')
+    elif request.user.es_coordinador:
+        ocumentos = DocumentoBiblioteca.objects.filter(subido_por=request.user).order_by('-fecha')
+    else:
+        universidad = request.user.universidad or request.user.universidad_coordinador
+        documentos = DocumentoBiblioteca.objects.filter(universidad=universidad).order_by('-fecha')
+    universidades = Universidad.objects.all()
+    return render(request, 'biblioteca/biblioteca.html', {'documentos': documentos, 'universidades': universidades})
+
+@login_required
+def biblioteca_editar(request, pk):
+    if not (request.user.is_staff or request.user.es_coordinador):
+        return redirect('biblioteca')
+    doc = get_object_or_404(DocumentoBiblioteca, pk=pk)
+    if request.method == 'POST':
+        doc.titulo = request.POST.get('titulo', doc.titulo)
+        doc.descripcion = request.POST.get('descripcion', doc.descripcion)
+        if request.FILES.get('archivo'):
+            doc.archivo = request.FILES.get('archivo')
+        doc.save()
+    return redirect('biblioteca')
+
+
+@login_required
+def biblioteca_eliminar(request, pk):
+    if not (request.user.is_staff or request.user.es_coordinador):
+        return redirect('biblioteca')
+    doc = get_object_or_404(DocumentoBiblioteca, pk=pk)
+    if request.method == 'POST':
+        doc.delete()
+    return redirect('biblioteca')

@@ -207,4 +207,10 @@ urlpatterns = [
     # Encuestas
     path('encuestas/<int:encuesta_id>/responder/', views.responder_encuesta, name='responder_encuesta'),
     path('mis-encuestas/', views.mis_encuestas, name='mis_encuestas'),
+    
+    #BIBLIOTECA
+    path('biblioteca/', views.biblioteca, name='biblioteca'),
+    path('biblioteca/crear/', views.biblioteca_crear, name='biblioteca_crear'),                                             
+    path('biblioteca/editar/<int:pk>/', views.biblioteca_editar, name='biblioteca_editar'),
+    path('biblioteca/eliminar/<int:pk>/', views.biblioteca_eliminar, name='biblioteca_eliminar'),
     ]

@@ -12,3 +12,8 @@ __pycache__/
 # Archivos temporales o de entorno
 .env
 *.log
+
+# Backup render
+backup_render.sql
+backup_django.json
+*.sql

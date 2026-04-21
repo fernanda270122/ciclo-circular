@@ -165,6 +165,14 @@
                     </a>
                     {% endif %}
                 </div>
+                 <div class="pt-4 pb-1 px-4">
+                        <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Documentos</p>
+                    </div>
+
+                    <a href="{% url 'biblioteca' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition group nav-item {% if request.resolver_match.url_name == 'biblioteca' %}nav-active{% else %}text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5{% endif %}">
+                        <i class="fa-solid fa-book w-5 text-center group-hover:text-primary transition"></i>
+                        <span class="font-medium">Biblioteca</span>
+                    </a>
                 <form method="post" action="{% url 'logout' %}">
                     {% csrf_token %}
                     <button type="submit" class="w-full text-left block px-4 py-3 rounded-lg text-sm font-medium text-red-400 hover:bg-white/10 flex gap-3 border-t border-white/10 mt-2">
@@ -275,15 +283,24 @@
 
                         {% if user.es_coordinador %}
                         <a href="{% url 'gestion_encuestas' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition group nav-item {% if request.resolver_match.url_name == 'gestion_encuestas' %}nav-active{% else %}text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5{% endif %}">
-                            <i class="fa-solid fa-clipboard-list w-5 text-center group-hover:text-blue-500 transition"></i> 
+                            <i class="fa-solid fa-clipboard-list w-5 text-center group-hover:text-blue-500 transition"></i>
                             <span class="font-medium">Gestionar Encuestas</span>
                         </a>
                         {% else %}
                         <a href="{% url 'mis_encuestas' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition group nav-item {% if request.resolver_match.url_name == 'mis_encuestas' %}nav-active{% else %}text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5{% endif %}">
-                            <i class="fa-solid fa-clipboard-list w-5 text-center group-hover:text-blue-500 transition"></i> 
+                            <i class="fa-solid fa-clipboard-list w-5 text-center group-hover:text-blue-500 transition"></i>
                             <span class="font-medium">Encuestas</span>
                         </a>
                         {% endif %}
+
+                        <div class="pt-4 pb-1 px-4">
+                            <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Documentos</p>
+                        </div>
+                        <a href="{% url 'biblioteca' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition group nav-item {% if request.resolver_match.url_name == 'biblioteca' %}nav-active{% else %}text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5{% endif %}">
+                            <i class="fa-solid fa-book w-5 text-center group-hover:text-primary transition"></i>
+                            <span class="font-medium">Biblioteca</span>
+                        </a>
+
                         <form method="post" action="{% url 'logout' %}">
                             {% csrf_token %}
                             <button type="submit" class="w-full text-left flex items-center gap-4 px-4 py-3 rounded-xl transition group nav-item text-red-400 hover:bg-slate-50 dark:hover:bg-white/5 border-t border-gray-100 dark:border-gray-700 mt-2">

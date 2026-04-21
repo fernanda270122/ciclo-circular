@@ -459,3 +459,22 @@ class DetalleRespuesta(models.Model):
 
     def __str__(self):
         return f"{self.pregunta.texto[:30]} - {self.respuesta.usuario.username}"
+    
+class DocumentoBiblioteca(models.Model):
+    numero_documento = models.CharField(max_length=20, unique=True, editable=False)
+    titulo = models.CharField(max_length=200)
+    descripcion = models.TextField()
+    archivo = models.FileField(upload_to='biblioteca/', blank=True, null=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+    universidad = models.ForeignKey(Universidad, on_delete=models.CASCADE, related_name='documentos')
+    subido_por = models.ForeignKey('user.Usuario', on_delete=models.SET_NULL, null=True, blank=True, related_name='documentos_subidos') 
+
+    def save(self, *args, **kwargs):
+        if not self.numero_documento:
+            ultimo = DocumentoBiblioteca.objects.order_by('id').last()
+            siguiente = (ultimo.id + 1) if ultimo else 1
+            self.numero_documento = f"DOC-{siguiente:04d}"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.numero_documento} - {self.titulo}"

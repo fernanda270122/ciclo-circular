@@ -231,6 +231,11 @@
                             <i class="fa-solid fa-briefcase w-5 text-center"></i> <span class="font-medium">Bolsa Empleo</span>
                         </a>
 
+                        <a href="{% url 'biblioteca' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition group nav-item {% if request.resolver_match.url_name == 'biblioteca' %}nav-active{% else %}text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5{% endif %}">
+                            <i class="fa-solid fa-book w-5 text-center group-hover:text-primary transition"></i>
+                            <span class="font-medium">Biblioteca</span>
+                        </a>
+
                         <form method="post" action="{% url 'logout' %}" class="mt-2 border-t border-gray-100 dark:border-gray-700 pt-2">
                             {% csrf_token %}
                             <button type="submit" class="w-full text-left flex items-center gap-4 px-4 py-3 rounded-xl transition group nav-item text-red-400 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer">

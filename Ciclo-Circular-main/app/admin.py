@@ -134,3 +134,10 @@ from .models import Producto, OrdenCompra
 
 admin.site.register(Producto)
 admin.site.register(OrdenCompra)
+
+from app.models import DocumentoBiblioteca
+@admin.register(DocumentoBiblioteca)
+class DocumentoBibliotecaAdmin(admin.ModelAdmin):
+    list_display = ('numero_documento', 'titulo', 'universidad', 'fecha')
+    list_filter = ('universidad',)
+    search_fields = ('titulo', 'descripcion')
