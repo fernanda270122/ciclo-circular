@@ -214,8 +214,14 @@ urlpatterns = [
     path('biblioteca/editar/<int:pk>/', views.biblioteca_editar, name='biblioteca_editar'),
     path('biblioteca/eliminar/<int:pk>/', views.biblioteca_eliminar, name='biblioteca_eliminar'),
     
-    #PITCH                                                                                                                                                                                     
+    #PITCH
     path('mi-pitch/', views.mi_pitch, name='mi_pitch'),
-    path('mi-pitch/guardar/', views.mi_pitch_guardar, name='mi_pitch_guardar'),                                                                                                                
+    path('mi-pitch/guardar/', views.mi_pitch_guardar, name='mi_pitch_guardar'),
     path('mi-pitch/eliminar/', views.mi_pitch_eliminar, name='mi_pitch_eliminar'),
+
+    #AVISOS ÚTILES
+    path('avisos-utiles/', views.avisos_utiles, name='avisos_utiles'),
+    path('avisos-utiles/agregar/', views.aviso_agregar, name='aviso_agregar'),
+    path('avisos-utiles/editar/<int:aviso_id>/', views.aviso_editar, name='aviso_editar'),
+    path('avisos-utiles/eliminar/<int:aviso_id>/', views.aviso_eliminar, name='aviso_eliminar'),
     ]

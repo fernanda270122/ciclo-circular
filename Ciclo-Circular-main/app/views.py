@@ -19,6 +19,7 @@ from django.http import HttpResponse, Http404
 from time import process_time_ns
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from django.db.models import Q
 
 
 import traceback
@@ -54,7 +55,8 @@ from .models import (
     Universidad, Facultad, Departamento, Carrera, 
     Etapa, RegistroActividad, Entrada, Salida, Oportunidades, Idea, 
     CVUsuario, Oferta, Necesidad, 
-    Evento, Invitacion, PreguntaEvento, TransaccionPago, DocumentoBiblioteca, PitchUsuario
+    Evento, Invitacion, PreguntaEvento, TransaccionPago, DocumentoBiblioteca, PitchUsuario,
+    AvisoUtil
 )
 from .forms import EntradaForm, SalidaForm, OportunidadForm
 
@@ -3798,4 +3800,51 @@ def mi_pitch_eliminar(request):
             request.user.pitch.delete()
         except PitchUsuario.DoesNotExist:
             pass
+
+
+# --- AVISOS ÚTILES ---
+
+@login_required
+def avisos_utiles(request):
+    q = request.GET.get('q', '').strip()
+    avisos = AvisoUtil.objects.all()
+    if q:
+        avisos = avisos.filter(
+            Q(detalle__icontains=q) |
+            Q(descripcion__icontains=q) |
+            Q(localidad__icontains=q)
+        )
+    return render(request, 'avisos/avisos_utiles.html', {'avisos': avisos, 'q': q})
+
+@login_required
+def aviso_agregar(request):
+    if request.method == 'POST':
+        AvisoUtil.objects.create(
+            usuario=request.user,
+            detalle=request.POST.get('detalle', '').strip(),
+            descripcion=request.POST.get('descripcion', '').strip(),
+            contacto=request.POST.get('contacto', '').strip(),
+            email=request.POST.get('email', '').strip(),
+            localidad=request.POST.get('localidad', '').strip(),
+        )
+    return redirect('avisos_utiles')
+
+@login_required
+def aviso_editar(request, aviso_id):
+    aviso = get_object_or_404(AvisoUtil, id=aviso_id, usuario=request.user)
+    if request.method == 'POST':
+        aviso.detalle     = request.POST.get('detalle', '').strip()
+        aviso.descripcion = request.POST.get('descripcion', '').strip()
+        aviso.contacto    = request.POST.get('contacto', '').strip()
+        aviso.email       = request.POST.get('email', '').strip()
+        aviso.localidad   = request.POST.get('localidad', '').strip()
+        aviso.save()
+    return redirect('avisos_utiles')
+
+@login_required
+def aviso_eliminar(request, aviso_id):
+    aviso = get_object_or_404(AvisoUtil, id=aviso_id, usuario=request.user)
+    if request.method == 'POST':
+        aviso.delete()
+    return redirect('avisos_utiles')
     return redirect('mi_pitch')

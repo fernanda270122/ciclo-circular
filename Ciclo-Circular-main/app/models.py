@@ -490,3 +490,19 @@ class PitchUsuario(models.Model):
 
     def __str__(self):
         return f"Pitch de {self.usuario.username}"
+
+
+class AvisoUtil(models.Model):
+    usuario     = models.ForeignKey('user.Usuario', on_delete=models.CASCADE, related_name='avisos')
+    detalle     = models.CharField(max_length=200)
+    descripcion = models.TextField()
+    contacto    = models.CharField(max_length=30)
+    email       = models.EmailField()
+    localidad   = models.CharField(max_length=100)
+    creado      = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-creado']
+
+    def __str__(self):
+        return f"{self.detalle} - {self.usuario.username}"
