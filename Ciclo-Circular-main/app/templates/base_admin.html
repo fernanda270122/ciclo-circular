@@ -115,9 +115,16 @@
                 <a href="{% url 'admin_usuarios' %}" class="block px-4 py-3 rounded-lg text-sm font-medium text-white hover:bg-white/10 flex gap-3"><i class="fa-solid fa-users w-5 text-center text-primary"></i> Usuarios</a>
                 <a href="{% url 'home_procesamiento' %}" class="block px-4 py-3 rounded-lg text-sm font-medium text-white hover:bg-white/10 flex gap-3"><i class="fa-solid fa-microchip w-5 text-center text-primary"></i> Procesamientos</a>
                 <a href="{% url 'menu_notificaciones' %}" class="block px-4 py-3 rounded-lg text-sm font-medium text-white hover:bg-white/10 flex gap-3"><i class="fa-solid fa-bell w-5 text-center text-primary"></i> Notificaciones</a>
-                
+
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full text-left block px-4 py-3 rounded-lg text-sm font-medium text-red-400 hover:bg-white/10 flex gap-3 cursor-pointer">
+                        <i class="fa-solid fa-right-from-bracket w-5 text-center"></i> Cerrar Sesión
+                    </button>
+                </form>
+
                 <div class="border-t border-white/10 my-2"></div>
-                
+
                 <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 mb-2">Herramientas</p>
                 <a href="{% url 'home_admin' %}" class="block px-4 py-3 rounded-lg text-sm font-medium text-white hover:bg-white/10 flex gap-3"><i class="fa-solid fa-house w-5 text-center text-slate-400"></i> Inicio</a>
                 <a href="{% url 'admin_mensajeria' %}" class="block px-4 py-3 rounded-lg text-sm font-medium text-white hover:bg-white/10 flex gap-3">
@@ -151,13 +158,12 @@
                 <a href="{% url 'biblioteca' %}" class="block px-4 py-3 rounded-lg text-sm font-medium text-white hover:bg-white/10 flex gap-3">
                     <i class="fa-solid fa-book w-5 text-center text-slate-400"></i> Biblioteca
                 </a>
-
-                <form method="post" action="{% url 'logout' %}">
-                    {% csrf_token %}
-                    <button type="submit" class="w-full text-left block px-4 py-3 rounded-lg text-sm font-medium text-red-400 hover:bg-white/10 flex gap-3 border-t border-white/10 mt-2 cursor-pointer">
-                        <i class="fa-solid fa-right-from-bracket w-5 text-center"></i> Cerrar Sesión
-                    </button>
-                </form>
+                <a href="{% url 'mi_pitch' %}" class="block px-4 py-3 rounded-lg text-sm font-medium text-white hover:bg-white/10 flex gap-3">
+                    <i class="fa-solid fa-microphone w-5 text-center text-slate-400"></i> Mi Pitch
+                </a>
+                <a href="{% url 'avisos_utiles' %}" class="block px-4 py-3 rounded-lg text-sm font-medium text-white hover:bg-white/10 flex gap-3">
+                    <i class="fa-solid fa-bullhorn w-5 text-center text-orange-400"></i> Avisos Útiles
+                </a>
             </div>
         </div>
     </nav>
@@ -237,6 +243,16 @@
                         <a href="{% url 'biblioteca' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition group nav-item {% if request.resolver_match.url_name == 'biblioteca' %}nav-active{% else %}text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5{% endif %}">
                             <i class="fa-solid fa-book w-5 text-center group-hover:text-primary transition"></i>
                             <span class="font-medium">Biblioteca</span>
+                        </a>
+
+                        <a href="{% url 'mi_pitch' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition group nav-item {% if request.resolver_match.url_name == 'mi_pitch' %}nav-active{% else %}text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5{% endif %}">
+                            <i class="fa-solid fa-microphone w-5 text-center group-hover:text-primary transition"></i>
+                            <span class="font-medium">Mi Pitch</span>
+                        </a>
+
+                        <a href="{% url 'avisos_utiles' %}" class="flex items-center gap-4 px-4 py-3 rounded-xl transition group nav-item {% if request.resolver_match.url_name == 'avisos_utiles' %}nav-active{% else %}text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5{% endif %}">
+                            <i class="fa-solid fa-bullhorn w-5 text-center group-hover:text-orange-500 transition"></i>
+                            <span class="font-medium">Avisos Útiles</span>
                         </a>
 
                         <form method="post" action="{% url 'logout' %}" class="mt-2 border-t border-gray-100 dark:border-gray-700 pt-2">
