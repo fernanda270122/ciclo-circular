@@ -45,7 +45,7 @@
         <!-- Texto fluido -->
         <p class="text-slate-700 dark:text-slate-200 text-sm leading-relaxed">
           <strong>{{ aviso.usuario.get_full_name|default:aviso.usuario.username }}</strong>
-          ofrece <strong>{{ aviso.detalle }}</strong>: {{ aviso.descripcion }}
+          publicó <strong>{{ aviso.detalle }}</strong>: {{ aviso.descripcion }}
           Ubicado/a en <strong>{{ aviso.localidad }}</strong>.
           Contacto: <strong>{{ aviso.contacto }}</strong> &middot;
           <a href="mailto:{{ aviso.email }}" class="text-primary underline">{{ aviso.email }}</a>.
