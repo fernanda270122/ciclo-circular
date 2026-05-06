@@ -166,6 +166,7 @@ if EN_RENDER or EN_PYTHONANYWHERE:
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     CSRF_COOKIE_SAMESITE = 'Lax'
+    CSRF_TRUSTED_ORIGINS = ['https://corpiciuchile.pythonanywhere.com', 'https://*.onrender.com']
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 else:
     SECURE_SSL_REDIRECT = False
