@@ -3709,23 +3709,14 @@ def biblioteca_crear(request):
                 universidad = None
             else:
                 universidad = Universidad.objects.filter(pk=universidad_id).first()
-        if titulo and descripcion and archivo:   
-            if request.user.is_staff and universidad_id == 'todas':
-                for uni in Universidad.objects.all():                                                                                                                                                             DocumentoBiblioteca.objects.create(
-                        titulo=titulo,
-                        descripcion=descripcion,
-                        archivo=archivo,
-                        universidad=uni,
-                        subido_por=request.user
-                    )
-            elif universidad:
-                DocumentoBiblioteca.objects.create(
-                    titulo=titulo,
-                    descripcion=descripcion,
-                    archivo=archivo,
-                    universidad=universidad,
-                    subido_por=request.user
-                )
+        if titulo and descripcion and archivo:
+            DocumentoBiblioteca.objects.create(
+                titulo=titulo,
+                descripcion=descripcion,
+                archivo=archivo,
+                universidad=universidad,
+                subido_por=request.user
+            )
         return redirect('biblioteca')
     return redirect('biblioteca')
 
@@ -3736,10 +3727,11 @@ def biblioteca(request):
     elif request.user.es_coordinador:
         documentos = DocumentoBiblioteca.objects.filter(subido_por=request.user).order_by('-fecha')
     else:
+        from django.db.models import Q
         universidad = request.user.universidad or request.user.universidad_coordinador
         if not universidad and request.user.carrera:
             universidad = request.user.carrera.departamento.facultad.universidad
-        documentos = DocumentoBiblioteca.objects.filter(universidad=universidad).order_by('-fecha')
+        documentos = DocumentoBiblioteca.objects.filter(Q(universidad=universidad) | Q(universidad=None)).order_by('-fecha')
     universidades = Universidad.objects.all()
     return render(request, 'biblioteca/biblioteca.html', {'documentos': documentos, 'universidades': universidades})
 

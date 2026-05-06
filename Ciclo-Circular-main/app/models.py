@@ -466,7 +466,7 @@ class DocumentoBiblioteca(models.Model):
     descripcion = models.TextField()
     archivo = models.FileField(upload_to='biblioteca/', blank=True, null=True)
     fecha = models.DateTimeField(auto_now_add=True)
-    universidad = models.ForeignKey(Universidad, on_delete=models.CASCADE, related_name='documentos')
+    universidad = models.ForeignKey(Universidad, on_delete=models.CASCADE, related_name='documentos', null=True, blank=True)
     subido_por = models.ForeignKey('user.Usuario', on_delete=models.SET_NULL, null=True, blank=True, related_name='documentos_subidos') 
 
     def save(self, *args, **kwargs):
