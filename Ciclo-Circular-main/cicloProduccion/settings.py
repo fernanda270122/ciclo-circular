@@ -201,7 +201,7 @@ DEFAULT_FROM_EMAIL = 'corp.ici.uchile@gmail.com'
 
 
 
-CSRF_TRUSTED_ORIGINS = ['https://corpiciuchile.pythonanywhere.com', 'https://*.onrender.com']
+CSRF_TRUSTED_ORIGINS = ['https://corpiciuchile.pythonanywhere.com', 'https://*.onrender.com', 'https://rediciuchile.cl', 'https://www.rediciuchile.cl']
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
